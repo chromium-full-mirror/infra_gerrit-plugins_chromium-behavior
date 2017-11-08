@@ -181,6 +181,27 @@
 </dom-module>
 
 
+<dom-module id="tbr-warner">
+  <script>
+    const _TBR_REGEX = /^\s*(TBR=|Tbr:).*$/mg;
+
+    /**
+     * Warns the user that just adding TBR= to a commit message isn't enough.
+     * @param {ChangeInfo} change: the object for the current change
+     * @param {string} message: the newly-set commit message
+     */
+    const warnAboutTbr = function(change, message) {
+      let match = _TBR_REGEX.exec(message);
+      if (match && change.labels[REVIEW_LABEL] &&
+          change.labels[REVIEW_LABEL].approved == null) {
+        alert('You have added a TBR line. You must also approve ' +
+              'this change for it to be submittable.');
+      }
+    };
+  </script>
+</dom-module>
+
+
 <dom-module id="install">
   <script>
     // Install all of the pieces of functionality defined above.
@@ -191,6 +212,7 @@
     Gerrit.install(plugin => {
       PLUGIN = plugin;
       PLUGIN.on('showchange', installLgtmWatcher);
+      PLUGIN.on('commitmsgedit', warnAboutTbr);
       PLUGIN.on('revert', interceptRevertMessage);
       PLUGIN.on('postrevert', approveAndSubmitRevert);
     });
