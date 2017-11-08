@@ -1,36 +1,198 @@
+<dom-module id="common">
+  <script>
+    // Common constants and helper functions used by multiple behaviors below.
+    let PLUGIN = null;
+    const REVIEW_LABEL = 'Code-Review';
+    const REVIEW_LABEL_MAX_VALUE = 1;
+    const CQ_LABEL = 'Commit-Queue';
+    const CQ_LABEL_MAX_VALUE = 2;
+  </script>
+</dom-module>
+
+
 <dom-module id="lgtm-catcher">
   <script>
-    Gerrit.install(plugin => {
-      const REVIEW_LABEL = 'Code-Review';
+    /**
+     * Watches for the reviewer to type "LGTM" (not case sensitive) at the
+     * beginning of their review message, and automatically sets the
+     * Code-Review label to +1 to save the reviewer a click. Doesn't change
+     * the value if the user has manually manipulated it already, or if the
+     * string "LGTM" appears anywhere else.
+     */
+    const installLgtmWatcher = function() {
+      const replyApi = PLUGIN.changeReply();
+      let autoAdded = false;
+      replyApi.addReplyTextChangedCallback(text => {
+        const labelValue = replyApi.getLabelValue(REVIEW_LABEL);
+        if (!labelValue) {
+          return;
+        }
+        if (labelValue === ' 0' &&
+            text.trim().toLowerCase().indexOf('lgtm') === 0) {
+          autoAdded = true;
+          replyApi.setLabelValue(REVIEW_LABEL, '+1');
+        } else if (labelValue === '+1' && autoAdded === true &&
+            text.trim().toLowerCase().indexOf('lgtm') !== 0) {
+          autoAdded = false;
+          replyApi.setLabelValue(REVIEW_LABEL, ' 0');
+        }
+      });
+    };
+  </script>
+</dom-module>
 
-      /**
-       * Watches for the reviewer to type "LGTM" (not case sensitive) at the
-       * beginning of their review message, and automatically sets the
-       * Code-Review label to +1 to save the reviewer a click. Doesn't change
-       * the value if the user has manually manipulated it already, or if the
-       * string "LGTM" appears anywhere else.
-       */
-      const autoApproveLgtm = function() {
-        const replyApi = plugin.changeReply();
-        let autoAdded = false;
-        replyApi.addReplyTextChangedCallback(text => {
-          const labelValue = replyApi.getLabelValue(REVIEW_LABEL);
-          if (!labelValue) {
-            return;
-          }
-          if (labelValue === ' 0' &&
-              text.trim().toLowerCase().indexOf('lgtm') === 0) {
-            autoAdded = true;
-            replyApi.setLabelValue(REVIEW_LABEL, '+1');
-          } else if (labelValue === '+1' && autoAdded === true &&
-              text.trim().toLowerCase().indexOf('lgtm') !== 0) {
-            autoAdded = false;
-            replyApi.setLabelValue(REVIEW_LABEL, ' 0');
+
+<dom-module id="revert-munger">
+  <script>
+    const _CQ_CHECKBOX_ID = 'cq-checkbox';
+
+    /**
+     * Parses git trailers (and Rietveld tags) from a commit description.
+     * @param {string} message: the commit message to parse
+     * @param {string} token: the LHS of the trailer to parse (e.g. 'Bug')
+     * @returns {string} all found trailers in normalized form (e.g. 'Bug: 1')
+     */
+    const getTrailer = function(message, token) {
+      // TODO(agable): Remove support for parsing CAPS= style tags.
+      var caps = token.replace(/-/g, '_').toUpperCase();
+      var trailerRegexp = new RegExp(
+        `^[ \t]*((${token}:|${caps}=)[ \t]*(.*))$`, 'gm');
+      var collection = new Set();
+      var collect = function(match, _wholeGroup, _keyGroup, valueGroup) {
+        valueGroup.split(/\s*,+\s*/).forEach(function (value) {
+          if (value) {
+            collection.add(value);
           }
         });
       };
+      message.replace(trailerRegexp, collect);
+      if (collection.size > 0) {
+        return token + ': ' + Array.from(collection).join(', ') + '\n';
+      }
+      return '';
+    };
 
-      plugin.on('showchange', autoApproveLgtm);
+    /**
+     * Called when the user clicks the "Revert" button to pull up the dialog.
+     * @param {ChangeInfo} change: the object for the current change
+     * @param {string} revertMsg: the default message Gerrit would use
+     * @param {string} originalMsg: the commit message of the original change
+     * @returns {string} used to populate the Revert dialog box
+     */
+    const interceptRevertMessage = function(change, revertMsg, originalMsg) {
+      if (!change.labels[CQ_LABEL]) { return revertMsg; }
+
+      // Add CQ checkbox if it does not already exist.
+      if (document.getElementById(_CQ_CHECKBOX_ID) == null) {
+        let newSpan = document.createElement('span');
+        newSpan.classList.add(Gerrit.css('margin: 8px'));
+        newSpan.textContent = 'Automatically send revert change to CQ:';
+
+        let cqCheck = document.createElement('input');
+        cqCheck.type = 'checkbox';
+        cqCheck.id = _CQ_CHECKBOX_ID;
+        cqCheck.checked = true;
+        cqCheck.classList.add(Gerrit.css('margin-left: 8px'));
+        newSpan.appendChild(cqCheck);
+
+        let footer = document.querySelector('#confirmRevertDialog footer');
+        footer.parentNode.insertBefore(newSpan, footer);
+      }
+
+      // Add email-style quoting ('> ') in front of the original commit text.
+      let originalCommitText = originalMsg.trim().replace(/^/gm, '> ');
+
+      // Start constructing the revert change description.
+      let newDescription =
+          revertMsg + '\n' +
+          'Original change\'s description:\n' + originalCommitText + '\n\n';
+
+      // Construct new Bug: trailer.
+      let bugLine = getTrailer(originalMsg, 'Bug');
+      bugLine += getTrailer(originalMsg, 'Issue');
+
+      // CrOS projects need only the bug line carried over.
+      if (change.project.indexOf('chromiumos/') === 0 ||
+          change.project.indexOf('chromeos/') === 0) {
+        newDescription += bugLine;
+        return newDescription.trim();
+      }
+
+      // Construct new TBR tag.
+      let reviewers = [];
+      if (change.reviewers.REVIEWER) {
+        reviewers = change.reviewers.REVIEWER.map(function(reviewer) {
+          return reviewer.email;
+        });
+      }
+      reviewers = reviewers.filter(function(email) {
+        // Do not add Commit bots to TBR. See crbug.com/642739
+        return email && !email.endsWith('commit-bot@chromium.org');
+      });
+      reviewers.push(change.owner.email);
+      reviewers = reviewers.filter(function(item, pos, self) {
+        return self.indexOf(item) === pos;
+      });
+      let tbrLine = 'TBR=' + reviewers.join(',') + '\n\n';
+      newDescription += tbrLine;
+
+      // Carry over original trybots trailer.
+      let includeLine = getTrailer(originalMsg, 'Cq-Include-Trybots');
+
+      // Construct new CQ control trailers, but only include them if the
+      // reverted change is recent enough.
+      let cqSkip = 'No-Presubmit: true\nNo-Tree-Checks: true\nNo-Try: true\n';
+      let submittedDate = new Date(change.submitted + ' UTC');
+      let diffSeconds = (Date.now() - submittedDate) / 1000;
+      if (diffSeconds > 24 * 60 * 60) {
+        alert('Note: The CL will not be automatically sent to the CQ and ' +
+              'the CQ checks will not be skipped because this CL landed ' +
+              'more than 1 day ago.');
+        document.getElementById(_CQ_CHECKBOX_ID).checked = false;
+        newDescription += '# Not skipping CQ checks because original CL ' +
+                          'landed > 1 day ago.\n\n';
+      } else {
+        newDescription += cqSkip;
+      }
+
+      // Add previously-constructed trailers.
+      newDescription += bugLine;
+      newDescription += includeLine;
+
+      return newDescription.trim();
+    };
+
+    /**
+     * Called when the Revert action has been completed.
+     * @param {ChangeInfo} change: the object representing the new revert
+     * @returns {LabelInfo} the labels to set on the new revert
+     */
+    const approveAndSubmitRevert = function(change) {
+      let labels = {};
+      // Auto-approve reverts.
+      labels[REVIEW_LABEL] = REVIEW_LABEL_MAX_VALUE;
+      // Immediately send to CQ only if _CQ_CHECKBOX_ID is checked.
+      if (document.getElementById(_CQ_CHECKBOX_ID).checked) {
+        labels[CQ_LABEL] = CQ_LABEL_MAX_VALUE;
+      }
+      return labels;
+    };
+  </script>
+</dom-module>
+
+
+<dom-module id="install">
+  <script>
+    // Install all of the pieces of functionality defined above.
+    // We do just one Gerrit.install because the plugin API expects
+    // one install per plugin; if you have multiple installs in a
+    // single plugin, the first showchange event might be fired before
+    // they're all installed.
+    Gerrit.install(plugin => {
+      PLUGIN = plugin;
+      PLUGIN.on('showchange', installLgtmWatcher);
+      PLUGIN.on('revert', interceptRevertMessage);
+      PLUGIN.on('postrevert', approveAndSubmitRevert);
     });
   </script>
 </dom-module>
