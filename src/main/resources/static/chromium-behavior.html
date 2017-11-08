@@ -103,6 +103,11 @@
       let originalCommitText = originalMsg.trim().replace(/^/gm, '> ');
 
       // Start constructing the revert change description.
+
+      // Show reverts-of-reverts as relands instead.
+      revertMsg = revertMsg.replace(
+          /^Revert "Revert "(.*)""/, 'Reland "$1"');
+
       let newDescription =
           revertMsg + '\n' +
           'Original change\'s description:\n' + originalCommitText + '\n\n';
