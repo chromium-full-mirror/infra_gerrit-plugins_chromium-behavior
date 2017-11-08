@@ -6,6 +6,33 @@
     const REVIEW_LABEL_MAX_VALUE = 1;
     const CQ_LABEL = 'Commit-Queue';
     const CQ_LABEL_MAX_VALUE = 2;
+    const STATUS_SUBMITTED = 'MERGED';
+
+    /**
+     * Parses git trailers (and Rietveld tags) from a commit description.
+     * @param {string} message: the commit message to parse
+     * @param {string} token: the LHS of the trailer to parse (e.g. 'Bug')
+     * @returns {string} all found trailers in normalized form (e.g. 'Bug: 1')
+     */
+    const getTrailer = function(message, token) {
+      // TODO(agable): Remove support for parsing CAPS= style tags.
+      var caps = token.replace(/-/g, '_').toUpperCase();
+      var trailerRegexp = new RegExp(
+        `^[ \t]*((${token}:|${caps}=)[ \t]*(.*))$`, 'gm');
+      var collection = new Set();
+      var collect = function(match, _wholeGroup, _keyGroup, valueGroup) {
+        valueGroup.split(/\s*,+\s*/).forEach(function (value) {
+          if (value) {
+            collection.add(value);
+          }
+        });
+      };
+      message.replace(trailerRegexp, collect);
+      if (collection.size > 0) {
+        return token + ': ' + Array.from(collection).join(', ') + '\n';
+      }
+      return '';
+    };
   </script>
 </dom-module>
 
@@ -42,35 +69,68 @@
 </dom-module>
 
 
+<dom-module id="reland-button">
+  <script>
+    let _currKey = null;
+
+    /**
+     * Adds a "Reland" button to the page, if appropriate.
+     * @param {ChangeInfo} change: the object for the current change
+     */
+    const installRelandButton = function(change) {
+      if (change.status !== STATUS_SUBMITTED) { return; }
+
+      let changeActions = PLUGIN.changeActions();
+
+      if (_currKey !== null) {
+        changeActions.remove(_currKey);
+      }
+
+      let newKey = changeActions.add(changeActions.ActionType.CHANGE, 'Reland');
+      changeActions.setEnabled(newKey, true);
+      let handler = function() {
+        changeActions.setEnabled(newKey, false);
+        changeActions.setLabel(newKey, 'Reopening...');
+        let orig = (
+            change.revisions[change.current_revision].commit.message.trim());
+        let subject = 'Reland "' + change.subject + '"\n\n';
+        let disclaimer = (
+            'This is a reland of ' + change.current_revision + '\n\n' +
+            'Original change\'s description:\n');
+        let quote = orig.replace(/^/gm, '> ');
+        let message = subject + disclaimer + quote;
+        let bugFooter = getTrailer(orig, 'Bug');
+        let cqFooter = getTrailer(orig, 'Cq-Include-Trybots');
+        if (bugFooter || cqFooter) {
+          message += '\n\n' + bugFooter + cqFooter;
+        }
+        let url = (
+            '/changes/' + change._number + '/revisions/' +
+            change.revisions[change.current_revision]._number +
+            '/cherrypick');
+        let body = {
+          message: message.trim(),
+          destination: change.branch,
+          keep_reviewers: true,
+        };
+        return PLUGIN.restApi().post(url, body).then(function(response) {
+          window.location.pathname = '/c/' + response._number;
+        }).catch(function(err) {
+          changeActions.setLabel(newKey, 'Can\'t reland');
+          changeActions.setEnabled(newKey, false);
+          throw err;
+        });
+      };
+      changeActions.addTapListener(newKey, handler);
+      _currKey = newKey;
+    };
+  </script>
+</dom-module>
+
+
 <dom-module id="revert-munger">
   <script>
     const _CQ_CHECKBOX_ID = 'cq-checkbox';
-
-    /**
-     * Parses git trailers (and Rietveld tags) from a commit description.
-     * @param {string} message: the commit message to parse
-     * @param {string} token: the LHS of the trailer to parse (e.g. 'Bug')
-     * @returns {string} all found trailers in normalized form (e.g. 'Bug: 1')
-     */
-    const getTrailer = function(message, token) {
-      // TODO(agable): Remove support for parsing CAPS= style tags.
-      var caps = token.replace(/-/g, '_').toUpperCase();
-      var trailerRegexp = new RegExp(
-        `^[ \t]*((${token}:|${caps}=)[ \t]*(.*))$`, 'gm');
-      var collection = new Set();
-      var collect = function(match, _wholeGroup, _keyGroup, valueGroup) {
-        valueGroup.split(/\s*,+\s*/).forEach(function (value) {
-          if (value) {
-            collection.add(value);
-          }
-        });
-      };
-      message.replace(trailerRegexp, collect);
-      if (collection.size > 0) {
-        return token + ': ' + Array.from(collection).join(', ') + '\n';
-      }
-      return '';
-    };
 
     /**
      * Called when the user clicks the "Revert" button to pull up the dialog.
@@ -217,6 +277,7 @@
     Gerrit.install(plugin => {
       PLUGIN = plugin;
       PLUGIN.on('showchange', installLgtmWatcher);
+      PLUGIN.on('showchange', installRelandButton);
       PLUGIN.on('commitmsgedit', warnAboutTbr);
       PLUGIN.on('revert', interceptRevertMessage);
       PLUGIN.on('postrevert', approveAndSubmitRevert);
