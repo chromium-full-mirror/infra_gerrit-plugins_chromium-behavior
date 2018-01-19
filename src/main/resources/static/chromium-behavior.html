@@ -404,7 +404,7 @@
         if (!labelValue) {
           return;
         }
-        if (labelValue === ' 0' &&
+        if (labelValue === ' 0' && autoAdded === false &&
             text.trim().toLowerCase().indexOf('lgtm') === 0) {
           autoAdded = true;
           replyApi.setLabelValue(REVIEW_LABEL, '+1');
