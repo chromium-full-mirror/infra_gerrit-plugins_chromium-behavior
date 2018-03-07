@@ -359,19 +359,29 @@
 
 <dom-module id="reland-button">
   <script>
-    let _currKey = null;
+    let _CUSTOM_RELAND_KEY = null;
 
     /**
      * Adds a "Reland" button to the page, if appropriate.
      * @param {ChangeInfo} change: the object for the current change
      */
-    const installRelandButton = function(change) {
+    const installRelandButton = async function(change) {
       if (change.status !== STATUS_SUBMITTED) { return; }
 
       let changeActions = PLUGIN.changeActions();
 
-      if (_currKey !== null) {
-        changeActions.remove(_currKey);
+      if (_CUSTOM_RELAND_KEY !== null) {
+        changeActions.remove(_CUSTOM_RELAND_KEY);
+      }
+
+      // Show neither the Revert nor Reland actions to non-committer drive-bys.
+      let currentUser = await PLUGIN.restApi().get('/accounts/self/detail');
+      if (currentUser.email !== change.owner.email &&
+          !isLabelVotePermitted(change, REVIEW_LABEL,
+                                '+' + REVIEW_LABEL_MAX_VALUE)) {
+        changeActions.setActionHidden(changeActions.ActionType.CHANGE,
+                                      changeActions.ChangeActions.REVERT, true);
+        return;
       }
 
       let newKey = changeActions.add(changeActions.ActionType.CHANGE, 'Reland');
@@ -410,7 +420,7 @@
         });
       };
       changeActions.addTapListener(newKey, handler);
-      _currKey = newKey;
+      _CUSTOM_RELAND_KEY = newKey;
     };
   </script>
 </dom-module>
