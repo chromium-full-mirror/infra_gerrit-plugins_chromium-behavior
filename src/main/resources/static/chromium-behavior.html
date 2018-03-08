@@ -13,6 +13,7 @@
     // Constants used by the AutoSubmit behaviors below.
     let AUTOSUBMIT_POPUP = null;
     let CUSTOM_QUICK_APPROVE_KEY = null;
+    let _APPROVED_BY_ALL_OTHER_REVIEWERS = false;
 
     /**
      * Returns the specified label from the change if it exists else [] is
@@ -125,6 +126,10 @@
         <div class="main" slot="main">
           Click "Trigger Autosubmit" if you would like to send this<br/>
           change to the CQ, or "Approve without Autosubmit" if not.<br/>
+          <template is="dom-if" if="[[!_isApprovedByAllOtherReviewers()]]">
+          <br/>
+          Note: Not all reviewers have approved this change!
+          </template>
         </div>
       </gr-confirm-dialog>
   </template>
@@ -144,6 +149,9 @@
           // Re-enable the quick approve button if there was an error.
           PLUGIN.changeActions().setEnabled(CUSTOM_QUICK_APPROVE_KEY, true);
         }.bind(this));
+      },
+      _isApprovedByAllOtherReviewers() {
+        return _APPROVED_BY_ALL_OTHER_REVIEWERS;
       },
     });
   </script>
@@ -187,6 +195,10 @@
         return;
       }
 
+      // Check to see if we are still waiting for any other reviewers to
+      // approve.
+      checkIfApprovedByAllOtherReviewers(change);
+
       // Watch for any label value changes to see if CQ+2 should be
       // automatically added.
       const replyApi = PLUGIN.changeReply();
@@ -195,6 +207,46 @@
 
       // Replace the CR+1 button with a custom handler on the main page.
       replaceQuickApproveButton(change, replyApi);
+    };
+
+    /**
+     * Checks to see if any reviewer, other than the current user and the
+     * change owner, has not approved the change yet. Updates the
+     * _APPROVED_BY_ALL_OTHER_REVIEWERS global var with the result.
+     */
+    const checkIfApprovedByAllOtherReviewers = function(change) {
+      if (change.reviewers && change.reviewers.REVIEWER) {
+        // Gather account_emails of all approvers.
+        const approver_emails = [];
+        for (let i=0; i<change.labels[REVIEW_LABEL].all.length; i++) {
+          if (change.labels[REVIEW_LABEL].all[i].value === 1) {
+            approver_emails.push(change.labels[REVIEW_LABEL].all[i].email);
+          }
+        }
+        // Get the account_email of the current user and use that to determine
+        // if any other reviewer has not approved the change yet.
+        PLUGIN.restApi().get('/accounts/self/detail').then(function(resp) {
+          let approvedByAllOtherReviewers = true;
+          const current_user_email = resp.email;
+          // Check to see if any reviewer, other than the current user and the
+          // change owner, has not approved the change yet.
+          for (i=0; i<change.reviewers.REVIEWER.length; i++) {
+            const reviewer_email = change.reviewers.REVIEWER[i].email;
+            if (reviewer_email != current_user_email &&
+                reviewer_email != change.owner.email &&
+                !approver_emails.includes(reviewer_email)) {
+              approvedByAllOtherReviewers = false;
+              break;
+            }
+          }
+          _APPROVED_BY_ALL_OTHER_REVIEWERS = approvedByAllOtherReviewers;
+        }.bind(this)).catch(function(err) {
+          let changeActions = PLUGIN.changeActions();
+          changeActions._el.dispatchEvent(new CustomEvent('show-alert',
+              {detail: {message: err}, bubbles: true}));
+          throw err;
+        });
+      }
     };
 
     /**
@@ -218,9 +270,6 @@
      *       Inform user that CQ+2 was automatically set
      */
     const labelValuesCallback = function(replyApi, change) {
-      const sendToCQMsg = 'This change\'s owner has enabled Auto-Submit. ' +
-                          'Your approval will also set CQ+2. Unselect that ' +
-                          'if you don\'t want to trigger it.'
       let ownerDeselectedAutoSubmit = false;
       return ({name, value}) => {
         const reviewApproved = replyApi.getLabelValue(REVIEW_LABEL) ===
@@ -236,7 +285,7 @@
           if (value === '+' + REVIEW_LABEL_MAX_VALUE && autoSubmitApproved &&
               !ownerDeselectedAutoSubmit) {
             replyApi.setLabelValue(CQ_LABEL, '+' + CQ_LABEL_MAX_VALUE);
-            replyApi.showMessage(sendToCQMsg);
+            replyApi.showMessage(getSendToCQReplyDialogMsg());
           }
         } else if (name === AUTOSUBMIT_LABEL) {
           // The change owner has changed the vote of the Auto-Submit label.
@@ -244,10 +293,23 @@
           if (!ownerDeselectedAutoSubmit && reviewApproved) {
             // If AS+1 and CR+1 then set CQ+2.
             replyApi.setLabelValue(CQ_LABEL, '+' + CQ_LABEL_MAX_VALUE);
-            replyApi.showMessage(sendToCQMsg);
+            replyApi.showMessage(getSendToCQReplyDialogMsg());
           }
         }
       };
+    };
+
+    /**
+     * Returns the autosubmit msg that should be displayed in the reply dialog.
+     */
+    const getSendToCQReplyDialogMsg = function() {
+      let sendToCQMsg = 'This change\'s owner has enabled Auto-Submit. ' +
+                        'Your approval will also set CQ+2. Unselect that ' +
+                        'if you don\'t want to trigger it.'
+      if (!_APPROVED_BY_ALL_OTHER_REVIEWERS) {
+        sendToCQMsg += '\nNote: Not all reviewers have approved this change!'
+      }
+      return sendToCQMsg;
     };
 
     /**
