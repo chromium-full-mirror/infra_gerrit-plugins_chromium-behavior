@@ -25,6 +25,16 @@
     };
 
     /**
+     * Calls the server to get list of of all draft comments that below to the
+     * calling user.
+     */
+    const getChangeDrafts = function() {
+      const changeNum = PLUGIN.changeActions()._el.changeNum;
+      var  url = '/changes/' + changeNum + '/drafts';
+      return PLUGIN.restApi().get(url);
+    };
+
+    /**
      * Returns the specified label from the change if it exists else [] is
      * returned.
      * @param {gr-change-view object} change
@@ -293,13 +303,27 @@
           // button (see crbug.com/820117).
           getChangeObj().then(function(refreshedChangeObj) {;
             replaceQuickApproveButton(refreshedChangeObj, replyApi);
+            // If CR+1 and AS+1 then set CQ+2 if there are no unresolved
+            // comments and/or drafts.
+            if (value === '+' + REVIEW_LABEL_MAX_VALUE && autoSubmitApproved &&
+                !ownerDeselectedAutoSubmit) {
+              const unresolved_msg = 'This change has unresolved comments ' +
+                                     'and/or drafts. Not triggering ' +
+                                     'AutoSubmit.';
+              if (refreshedChangeObj.unresolved_comment_count !== 0) {
+                replyApi.showMessage(unresolved_msg);
+              } else {
+                getChangeDrafts().then(function(drafts) {
+                  if (Object.keys(drafts).length === 0) {
+                    replyApi.setLabelValue(CQ_LABEL, '+' + CQ_LABEL_MAX_VALUE);
+                    replyApi.showMessage(getSendToCQReplyDialogMsg());
+                  } else {
+                    replyApi.showMessage(unresolved_msg);
+                  }
+                });
+              }
+            }
           });
-          // If CR+1 and AS+1 then set CQ+2.
-          if (value === '+' + REVIEW_LABEL_MAX_VALUE && autoSubmitApproved &&
-              !ownerDeselectedAutoSubmit) {
-            replyApi.setLabelValue(CQ_LABEL, '+' + CQ_LABEL_MAX_VALUE);
-            replyApi.showMessage(getSendToCQReplyDialogMsg());
-          }
         } else if (name === AUTOSUBMIT_LABEL) {
           // The change owner has changed the vote of the Auto-Submit label.
           ownerDeselectedAutoSubmit = (value !== '+' + AS_LABEL_MAX_VALUE);
