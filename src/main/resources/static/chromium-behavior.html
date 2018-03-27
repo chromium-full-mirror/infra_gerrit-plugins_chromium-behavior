@@ -16,6 +16,15 @@
     let _APPROVED_BY_ALL_OTHER_REVIEWERS = false;
 
     /**
+     * Calls the server to get an updated change obj and returns its promise.
+     */
+    const getChangeObj = function() {
+      const changeNum = PLUGIN.changeActions()._el.changeNum;
+      var  url = '/changes/' + changeNum + '/detail';
+      return PLUGIN.restApi().get(url);
+    };
+
+    /**
      * Returns the specified label from the change if it exists else [] is
      * returned.
      * @param {gr-change-view object} change
@@ -279,8 +288,12 @@
 
         if (name === REVIEW_LABEL) {
           // Always re-evaluate the quick approve button when Code-Review label
-          // changes.
-          replaceQuickApproveButton(change, replyApi);
+          // changes. Get the latest change object from the server to be sure we
+          // are making the right decisions when displaying the quick approve
+          // button (see crbug.com/820117).
+          getChangeObj().then(function(refreshedChangeObj) {;
+            replaceQuickApproveButton(refreshedChangeObj, replyApi);
+          });
           // If CR+1 and AS+1 then set CQ+2.
           if (value === '+' + REVIEW_LABEL_MAX_VALUE && autoSubmitApproved &&
               !ownerDeselectedAutoSubmit) {
@@ -334,8 +347,7 @@
       // Make sure the old quick approve button is hidden.
       changeActions.hideQuickApproveAction();
 
-      if (replyApi.getLabelValue(REVIEW_LABEL) ===
-              '+' + REVIEW_LABEL_MAX_VALUE) {
+      if (getChangeLabel(change, REVIEW_LABEL).approved) {
         if (CUSTOM_QUICK_APPROVE_KEY !== null) {
           // The custom button is visible but should be now removed because
           // the user set CR+1.
@@ -365,7 +377,7 @@
         // Disable the auto approve button.
         changeActions.setEnabled(key, false);
         if (!isAutoSubmitApproved(change, replyApi) ||
-            replyApi.getLabelValue(CQ_LABEL) === '+' + CQ_LABEL_MAX_VALUE) {
+            getChangeLabel(change, CQ_LABEL).approved) {
           // Do not automatically set CQ+2 if AS+1 is not set or if CQ+2
           // is already set.
           setApprovalLabels(false).catch(function(err) {
