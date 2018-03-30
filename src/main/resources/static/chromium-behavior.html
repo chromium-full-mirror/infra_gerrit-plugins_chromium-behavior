@@ -146,8 +146,12 @@
           Click "Trigger Autosubmit" if you would like to send this<br/>
           change to the CQ, or "Approve without Autosubmit" if not.<br/>
           <template is="dom-if" if="[[!_isApprovedByAllOtherReviewers()]]">
-          <br/>
-          Note: Not all reviewers have approved this change!
+            <br/>
+            <b>Note:</b> Not all reviewers have approved this change!
+          </template>
+          <template is="dom-if" if="[[unresolvedCommentsOrDrafts]]">
+            <br/>
+            <b>Note:</b> This change has unresolved comments and/or drafts!
           </template>
         </div>
       </gr-confirm-dialog>
@@ -155,6 +159,12 @@
   <script>
     Polymer({
       is: 'autosubmit-popup',
+      properties: {
+        unresolvedCommentsOrDrafts: Boolean,
+      },
+      ready() {
+        this._setUnresolvedCommentsOrDrafts();
+      },
       _handleConfirm() {
         this._setApprovalLabels(true);
         AUTOSUBMIT_POPUP.close();
@@ -171,6 +181,17 @@
       },
       _isApprovedByAllOtherReviewers() {
         return _APPROVED_BY_ALL_OTHER_REVIEWERS;
+      },
+      _setUnresolvedCommentsOrDrafts() {
+        getChangeObj().then(function(change) {
+          if (change.unresolved_comment_count !== 0) {
+            this.unresolvedCommentsOrDrafts = true;
+            return;
+          }
+          getChangeDrafts().then(function(drafts) {
+            this.unresolvedCommentsOrDrafts = Object.keys(drafts).length !== 0;
+          }.bind(this));
+        }.bind(this));
       },
     });
   </script>
