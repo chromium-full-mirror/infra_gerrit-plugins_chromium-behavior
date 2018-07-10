@@ -1,8 +1,6 @@
-load("//tools/bzl:plugin.bzl", "gerrit_plugin")
+load("//tools/bzl:js.bzl", "polygerrit_plugin")
 
-genrule(
-  name = "chromium-behavior",
-  srcs = ["src/main/resources/static/chromium-behavior.html"],
-  outs = ["chromium-behavior.html"],
-  cmd = "cp $< $@",
+polygerrit_plugin(
+    name = "chromium_behavior",
+    app = "src/main/resources/static/chromium-behavior.html",
 )

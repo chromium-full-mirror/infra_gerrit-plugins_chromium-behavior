@@ -37,9 +37,9 @@
     /**
      * Returns the specified label from the change if it exists else [] is
      * returned.
-     * @param {gr-change-view object} change
+     * @param {object} change gr-change-view
      * @param {string} labelName: The name of the label we want
-     * @returns {gr-change-view.label object}
+     * @returns {object} gr-change-view.label
      */
     const getChangeLabel = function(change, labelName) {
       return change.labels[labelName] || [];
@@ -47,19 +47,19 @@
 
     /**
      * Returns whether the specified vote is permitted on the label.
-     * @param {gr-change-view object} change
+     * @param {object} change gr-change-view
      * @param {string} labelName: The name of the label we want to check
      * @param {string} vote: The vote we will check (e.g. '+2')
      * @returns {boolean}
      */
     const isLabelVotePermitted = function(change, labelName, vote) {
-      permitted = change.permitted_labels[labelName] || [];
+      const permitted = change.permitted_labels[labelName] || [];
       return permitted.indexOf(vote) !== -1;
     };
 
     /**
      * Checks whether the specified label and max value exist on the change.
-     * @param {gr-change-view object} change
+     * @param {object} change gr-change-view
      * @param {string} labelName: The name of the label we want to check
      * @param {int} maxValue: The max value of the label we want to confirm.
      * @returns {boolean}
@@ -270,7 +270,7 @@
           const current_user_email = resp.email;
           // Check to see if any reviewer, other than the current user and the
           // change owner, has not approved the change yet.
-          for (i=0; i<change.reviewers.REVIEWER.length; i++) {
+          for (let i=0; i<change.reviewers.REVIEWER.length; i++) {
             const reviewer_email = change.reviewers.REVIEWER[i].email;
             if (reviewer_email != current_user_email &&
                 reviewer_email != change.owner.email &&
@@ -408,7 +408,7 @@
       }
 
       // Create the custom quick approve button.
-      key = changeActions.add(changeActions.ActionType.CHANGE, 'Code-Review+1');
+      const key = changeActions.add(changeActions.ActionType.CHANGE, 'Code-Review+1');
       changeActions.setEnabled(key, true);
       changeActions.addTapListener(
           key, quickApproveHandler(changeActions, replyApi, change, key));
@@ -480,11 +480,7 @@
   <script>
     let _CUSTOM_RELAND_KEY = null;
 
-    /**
-     * Adds a "Reland" button to the page, if appropriate.
-     * @param {ChangeInfo} change: the object for the current change
-     */
-    const installRelandButton = async function(change) {
+    function maybeInstallReland(change) {
       if (change.status !== STATUS_SUBMITTED) { return; }
 
       let changeActions = PLUGIN.changeActions();
@@ -494,15 +490,24 @@
       }
 
       // Show neither the Revert nor Reland actions to non-committer drive-bys.
-      let currentUser = await PLUGIN.restApi().get('/accounts/self/detail');
-      if (currentUser.email !== change.owner.email &&
-          !isLabelVotePermitted(change, REVIEW_LABEL,
-                                '+' + REVIEW_LABEL_MAX_VALUE)) {
-        changeActions.setActionHidden(changeActions.ActionType.CHANGE,
-                                      changeActions.ChangeActions.REVERT, true);
-        return;
-      }
+      PLUGIN.restApi().get('/accounts/self/detail').then(currentUser => {
+        if (currentUser.email !== change.owner.email &&
+            !isLabelVotePermitted(change, REVIEW_LABEL,
+                                  '+' + REVIEW_LABEL_MAX_VALUE)) {
+          changeActions.setActionHidden(changeActions.ActionType.CHANGE,
+                                        changeActions.ChangeActions.REVERT,
+                                        true);
+        } else {
+          installRelandButton(change, changeActions);
+        }
+      });
+    }
 
+    /**
+     * Adds a "Reland" button to the page, if appropriate.
+     * @param {ChangeInfo} change: the object for the current change
+     */
+    const installRelandButton = function(change, changeActions) {
       let newKey = changeActions.add(changeActions.ActionType.CHANGE, 'Reland');
       changeActions.setEnabled(newKey, true);
       let handler = function() {
@@ -697,7 +702,7 @@
       PLUGIN = plugin;
       PLUGIN.on('showchange', installLgtmWatcher);
       PLUGIN.on('showchange', installAutoSubmit);
-      PLUGIN.on('showchange', installRelandButton);
+      PLUGIN.on('showchange', maybeInstallReland);
       PLUGIN.on('commitmsgedit', warnAboutTbr);
       PLUGIN.on('revert', interceptRevertMessage);
       PLUGIN.on('postrevert', approveAndSubmitRevert);
