@@ -13,7 +13,10 @@
     // Constants used by the AutoSubmit behaviors below.
     let AUTOSUBMIT_POPUP = null;
     let CUSTOM_QUICK_APPROVE_KEY = null;
+    // Below are set in installAutoSubmit function.
     let _APPROVED_BY_ALL_OTHER_REVIEWERS = false;
+    let _REVIEW_LABEL_MAX_VALUE = 0;
+    let _CQ_LABEL_MAX_VALUE = 0;
 
     /**
      * Calls the server to get an updated change obj and returns its promise.
@@ -68,8 +71,21 @@
       if (!change.labels[labelName] || !change.labels[labelName].values) {
         return false;
       }
-      return maxValue ===
-          Math.max(...Object.keys(change.labels[labelName].values));
+      return maxValue === getLabelMaxValue(change, labelName);
+    };
+
+    /**
+     * Returns the max value of the specified label. Returns 0 if the label
+     * cannot be found or if it has no values.
+     * @param {object} change gr-change-view
+     * @param {string} labelName: The name of the label we want to check
+     * @returns {boolean}
+     */
+    const getLabelMaxValue = function(change, labelName) {
+      if (!change.labels[labelName] || !change.labels[labelName].values) {
+        return 0;
+      }
+      return Math.max(...Object.keys(change.labels[labelName].values));
     };
 
     /**
@@ -82,10 +98,10 @@
       const changeNum = PLUGIN.changeActions()._el.changeNum;
       var url = '/changes/' + changeNum + '/revisions/current/review';
       var body = {labels: {}};
-      body['labels'][REVIEW_LABEL] = '+' + REVIEW_LABEL_MAX_VALUE;
+      body['labels'][REVIEW_LABEL] = '+' + _REVIEW_LABEL_MAX_VALUE;
       body['drafts'] = 'PUBLISH';
       if (sendToCQ) {
-        body['labels'][CQ_LABEL] = '+' + CQ_LABEL_MAX_VALUE;
+        body['labels'][CQ_LABEL] = '+' + _CQ_LABEL_MAX_VALUE;
       }
       let changeActions = PLUGIN.changeActions();
       return PLUGIN.restApi().post(url, body).then(function() {
@@ -218,18 +234,23 @@
         // Do not need autosubmit behavior for already submitted changes.
         return;
       }
-      if (!checkLabelAndMaxValue(change, REVIEW_LABEL,
-                                 REVIEW_LABEL_MAX_VALUE) ||
-          !checkLabelAndMaxValue(change, CQ_LABEL, CQ_LABEL_MAX_VALUE) ||
+
+      // Save the change's CR and CQ label max values for easy access from
+      // different functions.
+      _REVIEW_LABEL_MAX_VALUE = getLabelMaxValue(change, REVIEW_LABEL)
+      _CQ_LABEL_MAX_VALUE = getLabelMaxValue(change, CQ_LABEL)
+
+      if (_REVIEW_LABEL_MAX_VALUE === 0 || _CQ_LABEL_MAX_VALUE === 0 ||
           !checkLabelAndMaxValue(change, AUTOSUBMIT_LABEL,
                                  AS_LABEL_MAX_VALUE)) {
         // Exit early if project does not have the expected labels with expected
         // max values.
         return;
       }
-      if (!isLabelVotePermitted(change, CQ_LABEL, '+' + CQ_LABEL_MAX_VALUE) ||
+
+      if (!isLabelVotePermitted(change, CQ_LABEL, '+' + _CQ_LABEL_MAX_VALUE) ||
           !isLabelVotePermitted(change, REVIEW_LABEL,
-                               '+' + REVIEW_LABEL_MAX_VALUE)) {
+                                '+' + _REVIEW_LABEL_MAX_VALUE)) {
         // Exit early if user does not have necessary permissions to CR+1
         // and CQ+2.
         return;
@@ -313,7 +334,7 @@
       let ownerDeselectedAutoSubmit = false;
       return ({name, value}) => {
         const reviewApproved = replyApi.getLabelValue(REVIEW_LABEL) ===
-                                   '+' + REVIEW_LABEL_MAX_VALUE;
+                                   '+' + _REVIEW_LABEL_MAX_VALUE;
         const autoSubmitApproved = isAutoSubmitApproved(change, replyApi);
         replyApi.showMessage('');
 
@@ -326,7 +347,7 @@
             replaceQuickApproveButton(refreshedChangeObj, replyApi);
             // If CR+1 and AS+1 then set CQ+2 if there are no unresolved
             // comments and/or drafts.
-            if (value === '+' + REVIEW_LABEL_MAX_VALUE && autoSubmitApproved &&
+            if (value === '+' + _REVIEW_LABEL_MAX_VALUE && autoSubmitApproved &&
                 !ownerDeselectedAutoSubmit) {
               const unresolved_msg = 'This change has unresolved comments ' +
                                      'and/or drafts. Not triggering ' +
@@ -336,7 +357,7 @@
               } else {
                 getChangeDrafts().then(function(drafts) {
                   if (Object.keys(drafts).length === 0) {
-                    replyApi.setLabelValue(CQ_LABEL, '+' + CQ_LABEL_MAX_VALUE);
+                    replyApi.setLabelValue(CQ_LABEL, '+' + _CQ_LABEL_MAX_VALUE);
                     replyApi.showMessage(getSendToCQReplyDialogMsg());
                   } else {
                     replyApi.showMessage(unresolved_msg);
@@ -350,7 +371,7 @@
           ownerDeselectedAutoSubmit = (value !== '+' + AS_LABEL_MAX_VALUE);
           if (!ownerDeselectedAutoSubmit && reviewApproved) {
             // If AS+1 and CR+1 then set CQ+2.
-            replyApi.setLabelValue(CQ_LABEL, '+' + CQ_LABEL_MAX_VALUE);
+            replyApi.setLabelValue(CQ_LABEL, '+' + _CQ_LABEL_MAX_VALUE);
             replyApi.showMessage(getSendToCQReplyDialogMsg());
           }
         }
@@ -362,8 +383,9 @@
      */
     const getSendToCQReplyDialogMsg = function() {
       let sendToCQMsg = 'This change\'s owner has enabled Auto-Submit. ' +
-                        'Your approval will also set CQ+2. Unselect that ' +
-                        'if you don\'t want to trigger it.'
+                        'Your approval will also set CQ+' +
+                        _CQ_LABEL_MAX_VALUE +
+                        '. Unselect that if you don\'t want to trigger it.'
       if (!_APPROVED_BY_ALL_OTHER_REVIEWERS) {
         sendToCQMsg += '\nNote: Not all reviewers have approved this change!'
       }
