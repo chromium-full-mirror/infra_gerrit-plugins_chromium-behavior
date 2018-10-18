@@ -280,7 +280,8 @@
         // Gather account_emails of all approvers.
         const approver_emails = [];
         for (let i=0; i<change.labels[REVIEW_LABEL].all.length; i++) {
-          if (change.labels[REVIEW_LABEL].all[i].value === 1) {
+          if (change.labels[REVIEW_LABEL].all[i].value ===
+              _REVIEW_LABEL_MAX_VALUE) {
             approver_emails.push(change.labels[REVIEW_LABEL].all[i].email);
           }
         }
@@ -418,7 +419,8 @@
         // See if the current user has approved the change.
         let approved_by_current_user = false;
         for (let i=0; i<change.labels[REVIEW_LABEL].all.length; i++) {
-          if (change.labels[REVIEW_LABEL].all[i].value === 1) {
+          if (change.labels[REVIEW_LABEL].all[i].value ===
+              _REVIEW_LABEL_MAX_VALUE) {
             if (resp._account_id ==
                 change.labels[REVIEW_LABEL].all[i]._account_id) {
               approved_by_current_user = true;
