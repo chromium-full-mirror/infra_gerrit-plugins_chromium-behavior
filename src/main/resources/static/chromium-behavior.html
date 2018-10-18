@@ -414,29 +414,49 @@
       // Make sure the old quick approve button is hidden.
       changeActions.hideQuickApproveAction();
 
-      if (getChangeLabel(change, REVIEW_LABEL).approved) {
-        if (CUSTOM_QUICK_APPROVE_KEY !== null) {
-          // The custom button is visible but should be now removed because
-          // the user set CR+1.
-          changeActions.remove(CUSTOM_QUICK_APPROVE_KEY);
-          changeActions.removeTapListener(CUSTOM_QUICK_APPROVE_KEY);
-          CUSTOM_QUICK_APPROVE_KEY =  null;
+      PLUGIN.restApi().get('/accounts/self/detail').then(function(resp) {
+        // See if the current user has approved the change.
+        let approved_by_current_user = false;
+        for (let i=0; i<change.labels[REVIEW_LABEL].all.length; i++) {
+          if (change.labels[REVIEW_LABEL].all[i].value === 1) {
+            if (resp._account_id ==
+                change.labels[REVIEW_LABEL].all[i]._account_id) {
+              approved_by_current_user = true;
+              break;
+            }
+          }
         }
-        // Do not create a new button because this user already set CR+1.
-        return;
-      } else if (CUSTOM_QUICK_APPROVE_KEY !== null) {
-        // There is already a button no need to create a new one.
-        return;
-      }
 
-      // Create the custom quick approve button.
-      const key = changeActions.add(changeActions.ActionType.CHANGE, 'Code-Review+1');
-      changeActions.setEnabled(key, true);
-      changeActions.addTapListener(
-          key, quickApproveHandler(changeActions, replyApi, change, key));
-      changeActions.setActionPriority(
-          changeActions.ActionType.CHANGE, key, -3);
-      CUSTOM_QUICK_APPROVE_KEY = key;
+        if (getChangeLabel(change, REVIEW_LABEL).approved &&
+            approved_by_current_user) {
+          if (CUSTOM_QUICK_APPROVE_KEY !== null) {
+            // The custom button is visible but should be now removed because
+            // the user set CR+1.
+            changeActions.remove(CUSTOM_QUICK_APPROVE_KEY);
+            changeActions.removeTapListener(CUSTOM_QUICK_APPROVE_KEY);
+            CUSTOM_QUICK_APPROVE_KEY =  null;
+          }
+          // Do not create a new button because this user already set CR+1.
+          return;
+        } else if (CUSTOM_QUICK_APPROVE_KEY !== null) {
+          // There is already a button no need to create a new one.
+          return;
+        }
+
+        // Create the custom quick approve button.
+        const key = changeActions.add(changeActions.ActionType.CHANGE, 'Code-Review+1');
+        changeActions.setEnabled(key, true);
+        changeActions.addTapListener(
+            key, quickApproveHandler(changeActions, replyApi, change, key));
+        changeActions.setActionPriority(
+            changeActions.ActionType.CHANGE, key, -3);
+        CUSTOM_QUICK_APPROVE_KEY = key;
+      }.bind(this)).catch(function(err) {
+        let changeActions = PLUGIN.changeActions();
+        changeActions._el.dispatchEvent(new CustomEvent('show-alert',
+            {detail: {message: err}, bubbles: true}));
+        throw err;
+      });
     };
 
     const quickApproveHandler = function(changeActions, replyApi, change, key) {
