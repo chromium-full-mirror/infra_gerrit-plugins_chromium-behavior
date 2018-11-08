@@ -5,9 +5,7 @@
     const AUTOSUBMIT_LABEL = 'Auto-Submit';
     const AS_LABEL_MAX_VALUE = 1;
     const REVIEW_LABEL = 'Code-Review';
-    const REVIEW_LABEL_MAX_VALUE = 1;
     const CQ_LABEL = 'Commit-Queue';
-    const CQ_LABEL_MAX_VALUE = 2;
     const STATUS_SUBMITTED = 'MERGED';
 
     // Constants used by the AutoSubmit behaviors below.
@@ -535,9 +533,10 @@
 
       // Show neither the Revert nor Reland actions to non-committer drive-bys.
       PLUGIN.restApi().get('/accounts/self/detail').then(currentUser => {
+        const reviewLabelMaxValue = getLabelMaxValue(change, REVIEW_LABEL);
         if (currentUser.email !== change.owner.email &&
             !isLabelVotePermitted(change, REVIEW_LABEL,
-                                  '+' + REVIEW_LABEL_MAX_VALUE)) {
+                                  '+' + reviewLabelMaxValue)) {
           changeActions.setActionHidden(changeActions.ActionType.CHANGE,
                                         changeActions.ChangeActions.REVERT,
                                         true);
@@ -703,10 +702,10 @@
     const approveAndSubmitRevert = function(change) {
       let labels = {};
       // Auto-approve reverts.
-      labels[REVIEW_LABEL] = REVIEW_LABEL_MAX_VALUE;
+      labels[REVIEW_LABEL] = getLabelMaxValue(change, REVIEW_LABEL);
       // Immediately send to CQ only if _CQ_CHECKBOX_ID is checked.
       if (document.getElementById(_CQ_CHECKBOX_ID).checked) {
-        labels[CQ_LABEL] = CQ_LABEL_MAX_VALUE;
+        labels[CQ_LABEL] = getLabelMaxValue(change, CQ_LABEL);
       }
       return labels;
     };
