@@ -274,7 +274,8 @@
      * _APPROVED_BY_ALL_OTHER_REVIEWERS global var with the result.
      */
     const checkIfApprovedByAllOtherReviewers = function(change) {
-      if (change.reviewers && change.reviewers.REVIEWER) {
+      if (change.reviewers && change.reviewers.REVIEWER &&
+          change.labels[REVIEW_LABEL].all) {
         // Gather account_emails of all approvers.
         const approver_emails = [];
         for (let i=0; i<change.labels[REVIEW_LABEL].all.length; i++) {
@@ -416,13 +417,15 @@
       PLUGIN.restApi().get('/accounts/self/detail').then(function(resp) {
         // See if the current user has approved the change.
         let approved_by_current_user = false;
-        for (let i=0; i<change.labels[REVIEW_LABEL].all.length; i++) {
-          if (change.labels[REVIEW_LABEL].all[i].value ===
-              _REVIEW_LABEL_MAX_VALUE) {
-            if (resp._account_id ==
-                change.labels[REVIEW_LABEL].all[i]._account_id) {
-              approved_by_current_user = true;
-              break;
+        if (change.labels[REVIEW_LABEL].all) {
+          for (let i=0; i<change.labels[REVIEW_LABEL].all.length; i++) {
+            if (change.labels[REVIEW_LABEL].all[i].value ===
+                _REVIEW_LABEL_MAX_VALUE) {
+              if (resp._account_id ==
+                  change.labels[REVIEW_LABEL].all[i]._account_id) {
+                approved_by_current_user = true;
+                break;
+              }
             }
           }
         }
