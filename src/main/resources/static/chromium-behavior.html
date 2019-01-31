@@ -476,12 +476,16 @@
           }.bind(this));
         } else {
           if (AUTOSUBMIT_POPUP) {
+            // Make sure the popup is completely closed before we open it.
+            AUTOSUBMIT_POPUP.close();
             AUTOSUBMIT_POPUP.open();
           } else {
             PLUGIN.popup('autosubmit-popup').then(function(pluginModule) {
               AUTOSUBMIT_POPUP = pluginModule;
             });
           }
+          // Re-enable the key in case the user clicks outside the popup.
+          changeActions.setEnabled(key, true);
         }
       };
     };
