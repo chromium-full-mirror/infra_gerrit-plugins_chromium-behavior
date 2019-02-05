@@ -265,7 +265,7 @@
           labelValuesCallback(replyApi, change))
 
       // Replace the CR+1 button with a custom handler on the main page.
-      replaceQuickApproveButton(change, replyApi);
+      replaceQuickApproveButton(change);
     };
 
     /**
@@ -344,7 +344,7 @@
           // are making the right decisions when displaying the quick approve
           // button (see crbug.com/820117).
           getChangeObj().then(function(refreshedChangeObj) {;
-            replaceQuickApproveButton(refreshedChangeObj, replyApi);
+            replaceQuickApproveButton(refreshedChangeObj);
             // If CR+1 and AS+1 then set CQ+2 if there are no unresolved
             // comments and/or drafts.
             if (value === '+' + _REVIEW_LABEL_MAX_VALUE && autoSubmitApproved &&
@@ -408,7 +408,7 @@
      * This function replaces the quick approve button with a new button with
      * a custom handler that prompts if AS+1 is set.
      */
-    const replaceQuickApproveButton = function(change, replyApi) {
+    const replaceQuickApproveButton = function(change) {
       let changeActions = PLUGIN.changeActions();
 
       // Make sure the old quick approve button is hidden.
@@ -450,7 +450,7 @@
         const key = changeActions.add(changeActions.ActionType.CHANGE, 'Code-Review+1');
         changeActions.setEnabled(key, true);
         changeActions.addTapListener(
-            key, quickApproveHandler(changeActions, replyApi, change, key));
+            key, quickApproveHandler(changeActions, key));
         changeActions.setActionPriority(
             changeActions.ActionType.CHANGE, key, -3);
         CUSTOM_QUICK_APPROVE_KEY = key;
@@ -462,31 +462,33 @@
       });
     };
 
-    const quickApproveHandler = function(changeActions, replyApi, change, key) {
+    const quickApproveHandler = function(changeActions, key) {
       return () => {
-        // Disable the auto approve button.
-        changeActions.setEnabled(key, false);
-        if (!isAutoSubmitApproved(change, replyApi) ||
-            getChangeLabel(change, CQ_LABEL).approved) {
-          // Do not automatically set CQ+2 if AS+1 is not set or if CQ+2
-          // is already set.
-          setApprovalLabels(false).catch(function(err) {
-            // Re-enable the quick approve button if there was an error.
-            changeActions.setEnabled(key, true);
-          }.bind(this));
-        } else {
-          if (AUTOSUBMIT_POPUP) {
-            // Make sure the popup is completely closed before we open it.
-            AUTOSUBMIT_POPUP.close();
-            AUTOSUBMIT_POPUP.open();
+        getChangeObj().then(function(refreshedChangeObj) {
+          // Disable the auto approve button.
+          changeActions.setEnabled(key, false);
+          if (!getChangeLabel(refreshedChangeObj, AUTOSUBMIT_LABEL).approved ||
+              getChangeLabel(refreshedChangeObj, CQ_LABEL).approved) {
+            // Do not automatically set CQ+2 if AS+1 is not set or if CQ+2
+            // is already set.
+            setApprovalLabels(false).catch(function(err) {
+              // Re-enable the quick approve button if there was an error.
+              changeActions.setEnabled(key, true);
+            }.bind(this));
           } else {
-            PLUGIN.popup('autosubmit-popup').then(function(pluginModule) {
-              AUTOSUBMIT_POPUP = pluginModule;
-            });
+            if (AUTOSUBMIT_POPUP) {
+              // Make sure the popup is completely closed before we open it.
+              AUTOSUBMIT_POPUP.close();
+              AUTOSUBMIT_POPUP.open();
+            } else {
+              PLUGIN.popup('autosubmit-popup').then(function(pluginModule) {
+                AUTOSUBMIT_POPUP = pluginModule;
+              });
+            }
+            // Re-enable the key in case the user clicks outside the popup.
+            changeActions.setEnabled(key, true);
           }
-          // Re-enable the key in case the user clicks outside the popup.
-          changeActions.setEnabled(key, true);
-        }
+        });
       };
     };
   </script>
