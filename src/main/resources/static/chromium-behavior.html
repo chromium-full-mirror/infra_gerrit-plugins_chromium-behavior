@@ -543,14 +543,18 @@
       // Show neither the Revert nor Reland actions to non-committer drive-bys.
       PLUGIN.restApi().get('/accounts/self/detail').then(currentUser => {
         const reviewLabelMaxValue = getLabelMaxValue(change, REVIEW_LABEL);
+        installRelandButton(change, changeActions);
         if (currentUser.email !== change.owner.email &&
             !isLabelVotePermitted(change, REVIEW_LABEL,
                                   '+' + reviewLabelMaxValue)) {
-          changeActions.setActionHidden(changeActions.ActionType.CHANGE,
-                                        changeActions.ChangeActions.REVERT,
-                                        true);
-        } else {
-          installRelandButton(change, changeActions);
+          changeActions.removePrimaryActionKey(changeActions.ChangeActions.REVERT);
+          changeActions.setActionOverflow(changeActions.ActionType.CHANGE,
+                                          changeActions.ChangeActions.REVERT,
+                                          true);
+          changeActions.removePrimaryActionKey(_CUSTOM_RELAND_KEY);
+          changeActions.setActionOverflow(changeActions.ActionType.CHANGE,
+                                          _CUSTOM_RELAND_KEY,
+                                          true);
         }
       });
     }
