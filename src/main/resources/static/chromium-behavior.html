@@ -447,7 +447,8 @@
         }
 
         // Create the custom quick approve button.
-        const key = changeActions.add(changeActions.ActionType.CHANGE, 'Code-Review+1');
+        const key = changeActions.add(changeActions.ActionType.CHANGE,
+                                      'Code-Review+' + _REVIEW_LABEL_MAX_VALUE);
         changeActions.setEnabled(key, true);
         changeActions.addTapListener(
             key, quickApproveHandler(changeActions, key));
