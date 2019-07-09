@@ -748,6 +748,106 @@
 </dom-module>
 
 
+<dom-module id="chops-banner">
+  <style>
+    .banner {
+      background: pink;
+      text-align: center;
+      font-size: 15px;
+      white-space: pre-wrap;
+    }
+
+    .close-btn {
+      position: absolute;
+      right: 5px;
+      top: 1px;
+      color: #777;
+      cursor: pointer;
+    }
+  </style>
+  <script src="./chops-announcements.js"></script>
+  <script>
+    function setClosedBannerCookie(announcementId) {
+      let tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      document.cookie = `announcement${announcementId}=closed; expires=${tomorrow.toUTCString()};`;
+    }
+    function getAnnouncementCookie(announcementId) {
+      const decodedCookie = decodeURIComponent(document.cookie);
+      const cookiesList = decodedCookie.split(';');
+      const prefix = `announcement${announcementId}=`;
+      const matchingCookie = cookiesList.find(cookie => {
+        cookie = cookie.trim();
+        if (cookie.startsWith(prefix)) {
+          return true;
+        }
+      });
+      if (!matchingCookie) {
+        return '';
+      }
+      return matchingCookie.trim();
+    }
+    function announcementCookieExists(announcementId) {
+      const cookie = getAnnouncementCookie(announcementId);
+      return (cookie !== '');
+    }
+    /**
+     * Sets up the banner element and begins calls to chopsdash for chops announcements.
+     * @param {element} the banner element.
+     */
+    const installBanner = function(element) {
+      let chopsAnnouncementsPlatform;
+      switch (window.location.host) {
+        case 'chromium-review.googlesource.com':
+        case 'canary-chromium-review.googlesource.com':
+          chopsAnnouncementsPlatform = 'chromium-review';
+          break;
+        case 'chrome-internal-review.googlesource.com':
+        case 'canary-chrome-internal-review.googlesource.com':
+          chopsAnnouncementsPlatform = 'chrome-internal-review';
+          break;
+      }
+      if (chopsAnnouncementsPlatform) {
+        let shownAnnouncements = [];
+        // Set up banner element
+        let banner = element.appendChild(document.createElement('div'));
+        let message = banner.appendChild(document.createElement('p'));
+        banner.classList.add('banner');
+        let closeBtn = banner.appendChild(document.createElement('span'))
+        closeBtn.textContent = 'x';
+        closeBtn.classList.add('close-btn');
+        function closeBanner() {
+          message.textContent = '';
+          // Add a cookie for announcements in the banner so they don't reappear.
+          shownAnnouncements.forEach(ann => setClosedBannerCookie(ann.id));
+          shownAnnouncements = [];
+        }
+        closeBtn.addEventListener('click', closeBanner);
+        // Set up calls to chopsdash to fetch live announcements
+        const client = new ChopsDashClient();
+        async function updateBanner() {
+          const respPromise = client.getLiveAnnouncements(chopsAnnouncementsPlatform);
+          respPromise.then((resp) => {
+            // Only show announcements that weren't part of a banner that got closed.
+            shownAnnouncements = resp.announcements.filter(ann => (
+              (!announcementCookieExists(ann.id))));
+            const messages = shownAnnouncements.map(ann => ann.messageContent);
+            message.textContent = messages.join('\r\n');
+          }).catch((e) => {
+            console.log(e);
+            message.textContent = 'Unable to get outage announcements from ChOpsDash.';
+          });
+        }
+        updateBanner();
+        const refreshTimeMin = 5;
+        const updateMessageTime = 60 * 1000;
+        setInterval(updateBanner, refreshTimeMin * updateMessageTime);
+      }
+    };
+  </script>
+</dom-module>
+
+
 <dom-module id="install">
   <script>
     // Install all of the pieces of functionality defined above.
@@ -757,6 +857,7 @@
     // they're all installed.
     Gerrit.install(plugin => {
       PLUGIN = plugin;
+      PLUGIN.hook('banner').onAttached(installBanner);
       PLUGIN.on('showchange', installLgtmWatcher);
       PLUGIN.on('showchange', installAutoSubmit);
       PLUGIN.on('showchange', maybeInstallReland);
