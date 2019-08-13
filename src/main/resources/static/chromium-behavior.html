@@ -749,24 +749,23 @@
 
 
 <dom-module id="chops-banner">
-  <style>
-    .banner {
-      background: pink;
-      text-align: center;
-      font-size: 15px;
-      white-space: pre-wrap;
-    }
-
-    .close-btn {
-      position: absolute;
-      right: 5px;
-      top: 1px;
-      color: #777;
-      cursor: pointer;
-    }
-  </style>
   <script src="./chops-announcements.js"></script>
   <script>
+    const BANNER_STYLES = {
+        styleBanner:
+          'background: pink;' +
+          'text-align: center;' +
+          'font-size: 15px;' +
+          'white-space: pre-wrap;',
+        styleCloseBtn:
+          'position: absolute;' +
+          'right: 5px;' +
+          'top: 1px;' +
+          'color: #777;' +
+          'cursor: pointer;',
+        styleMessage: 'margin: 0px;',
+    };
+
     function setClosedBannerCookie(announcementId) {
       let tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -812,10 +811,11 @@
         // Set up banner element
         let banner = element.appendChild(document.createElement('div'));
         let message = banner.appendChild(document.createElement('p'));
-        banner.classList.add('banner');
+        message.style = BANNER_STYLES.styleMessage;
+        banner.style = BANNER_STYLES.styleBanner;
         let closeBtn = banner.appendChild(document.createElement('span'))
         closeBtn.textContent = 'x';
-        closeBtn.classList.add('close-btn');
+        closeBtn.style = BANNER_STYLES.styleCloseBtn;
         function closeBanner() {
           message.textContent = '';
           // Add a cookie for announcements in the banner so they don't reappear.
@@ -838,6 +838,7 @@
             message.textContent = 'Unable to get outage announcements from ChOpsDash.';
           });
         }
+
         updateBanner();
         const refreshTimeMin = 5;
         const updateMessageTime = 60 * 1000;
