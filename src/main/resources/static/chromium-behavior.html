@@ -141,6 +141,24 @@
       }
       return '';
     };
+
+    // A CQ checkbox for options to send revert immediately to CQ.
+    const CQ_INPUT_STYLES = {
+      styleSpan: 'margin: 8px;',
+      styleCheck: 'margin-left: 8px;',
+      styleBlock: 'display: block;',
+      styleHidden: 'display: none;',
+    }
+
+    const cqSpan = document.createElement('span');
+    cqSpan.style = CQ_INPUT_STYLES.styleSpan;
+    cqSpan.textContent = 'Automatically send revert change to CQ';
+
+    const cqCheck = document.createElement('input');
+    cqCheck.type = 'checkbox';
+    cqCheck.checked = true;
+    cqCheck.style = CQ_INPUT_STYLES.styleCheck;
+    cqSpan.appendChild(cqCheck);
   </script>
 </dom-module>
 
@@ -611,7 +629,18 @@
 
 <dom-module id="revert-munger">
   <script>
-    const _CQ_CHECKBOX_ID = 'cq-checkbox';
+
+
+    /**
+     * Called when the confirm-revert-change element is added to the page.
+     * Adds the cq checkbox to the confirm revert change dialog.
+     * @param {element} element: the confirm-revert-change element.
+     */
+    const installCQCheckbox = function(element) {
+      // Add CQ checkbox to confirm-revert-dialog.
+      element.style = CQ_INPUT_STYLES.styleBlock;
+      element.appendChild(cqSpan);
+    }
 
     /**
      * Called when the user clicks the "Revert" button to pull up the dialog.
@@ -621,25 +650,11 @@
      * @returns {string} used to populate the Revert dialog box
      */
     const interceptRevertMessage = function(change, revertMsg, originalMsg) {
-      if (!change.labels[CQ_LABEL]) { return revertMsg; }
-
-      // Add CQ checkbox if it does not already exist.
-      if (document.getElementById(_CQ_CHECKBOX_ID) == null) {
-        let newSpan = document.createElement('span');
-        newSpan.classList.add(Gerrit.css('margin: 8px'));
-        newSpan.textContent = 'Automatically send revert change to CQ:';
-
-        let cqCheck = document.createElement('input');
-        cqCheck.type = 'checkbox';
-        cqCheck.id = _CQ_CHECKBOX_ID;
-        cqCheck.checked = true;
-        cqCheck.classList.add(Gerrit.css('margin-left: 8px'));
-        newSpan.appendChild(cqCheck);
-
-        let footer = document.querySelector('#confirmRevertDialog footer');
-        footer.parentNode.insertBefore(newSpan, footer);
+      if (!change.labels[CQ_LABEL]) {
+        cqSpan.style = CQ_INPUT_STYLES.styleHidden;
+        cqCheck.checked = false;
+        return revertMsg;
       }
-
       // Add email-style quoting ('> ') in front of the original commit text.
       let originalCommitText = originalMsg.trim().replace(/^/gm, '> ');
 
@@ -694,7 +709,8 @@
         alert('Note: The CL will not be automatically sent to the CQ and ' +
               'the CQ checks will not be skipped because this CL landed ' +
               'more than 1 day ago.');
-        document.getElementById(_CQ_CHECKBOX_ID).checked = false;
+        cqCheck.checked = false;
+        cqSpan.style = CQ_INPUT_STYLES.styleHidden;
         newDescription += '# Not skipping CQ checks because original CL ' +
                           'landed > 1 day ago.\n\n';
       } else {
@@ -717,8 +733,8 @@
       let labels = {};
       // Auto-approve reverts.
       labels[REVIEW_LABEL] = getLabelMaxValue(change, REVIEW_LABEL);
-      // Immediately send to CQ only if _CQ_CHECKBOX_ID is checked.
-      if (document.getElementById(_CQ_CHECKBOX_ID).checked) {
+      // Immediately send to CQ only if cqCheck is checked.
+      if (cqCheck.checked) {
         labels[CQ_LABEL] = getLabelMaxValue(change, CQ_LABEL);
       }
       return labels;
@@ -864,6 +880,7 @@
       PLUGIN.on('showchange', maybeInstallReland);
       PLUGIN.on('commitmsgedit', warnAboutTbr);
       PLUGIN.on('revert', interceptRevertMessage);
+      PLUGIN.hook('confirm-revert-change').onAttached(installCQCheckbox);
       PLUGIN.on('postrevert', approveAndSubmitRevert);
     });
   </script>
