@@ -778,7 +778,8 @@
           'right: 5px;' +
           'top: 1px;' +
           'color: #777;' +
-          'cursor: pointer;',
+          'cursor: pointer;' +
+          'visibility: hidden;',
         styleMessage: 'margin: 0px;',
     };
 
@@ -837,6 +838,7 @@
           // Add a cookie for announcements in the banner so they don't reappear.
           shownAnnouncements.forEach(ann => setClosedBannerCookie(ann.id));
           shownAnnouncements = [];
+          closeBtn.style.visibility = 'hidden';
         }
         closeBtn.addEventListener('click', closeBanner);
         // Set up calls to chopsdash to fetch live announcements
@@ -849,9 +851,12 @@
               (!announcementCookieExists(ann.id))));
             const messages = shownAnnouncements.map(ann => ann.messageContent);
             message.textContent = messages.join('\r\n');
+            closeBtn.style.visibility = messages.length() ?
+                'visible' : 'hidden';
           }).catch((e) => {
             console.log(e);
             message.textContent = 'Unable to get outage announcements from ChOpsDash.';
+            closeBtn.style.visibility = 'visible';
           });
         }
 
