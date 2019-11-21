@@ -851,8 +851,7 @@
               (!announcementCookieExists(ann.id))));
             const messages = shownAnnouncements.map(ann => ann.messageContent);
             message.textContent = messages.join('\r\n');
-            closeBtn.style.visibility = messages.length() ?
-                'visible' : 'hidden';
+            closeBtn.style.visibility = messages.length ? 'visible' : 'hidden';
           }).catch((e) => {
             console.log(e);
             message.textContent = 'Unable to get outage announcements from ChOpsDash.';
