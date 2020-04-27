@@ -156,7 +156,6 @@
 
     const cqCheck = document.createElement('input');
     cqCheck.type = 'checkbox';
-    cqCheck.checked = true;
     cqCheck.style = CQ_INPUT_STYLES.styleCheck;
     cqSpan.appendChild(cqCheck);
   </script>
@@ -652,7 +651,6 @@
     const interceptRevertMessage = function(change, revertMsg, originalMsg) {
       if (!change.labels[CQ_LABEL]) {
         cqSpan.style = CQ_INPUT_STYLES.styleHidden;
-        cqCheck.checked = false;
         return revertMsg;
       }
       // Add email-style quoting ('> ') in front of the original commit text.
@@ -709,7 +707,6 @@
         alert('Note: The CL will not be automatically sent to the CQ and ' +
               'the CQ checks will not be skipped because this CL landed ' +
               'more than 1 day ago.');
-        cqCheck.checked = false;
         cqSpan.style = CQ_INPUT_STYLES.styleHidden;
         newDescription += '# Not skipping CQ checks because original CL ' +
                           'landed > 1 day ago.\n\n';
