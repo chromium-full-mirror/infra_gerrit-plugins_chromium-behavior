@@ -659,8 +659,11 @@
       // Start constructing the revert change description.
 
       // Show reverts-of-reverts as relands instead.
+      let originalRevertMsg = revertMsg;
       revertMsg = revertMsg.replace(
           /^Revert "Revert "(.*)""/, 'Reland "$1"');
+
+      let isReland = (originalRevertMsg !== revertMsg);
 
       let newDescription =
           revertMsg + '\n' +
@@ -698,9 +701,6 @@
       // Carry over original trybots trailer.
       let includeLine = getTrailer(originalMsg, 'Cq-Include-Trybots');
 
-      // Construct new CQ control trailers, but only include them if the
-      // reverted change is recent enough.
-      let cqSkip = 'No-Presubmit: true\nNo-Tree-Checks: true\nNo-Try: true\n';
       let submittedDate = new Date(change.submitted + ' UTC');
       let diffSeconds = (Date.now() - submittedDate) / 1000;
       if (diffSeconds > 24 * 60 * 60) {
@@ -710,8 +710,15 @@
         cqSpan.style = CQ_INPUT_STYLES.styleHidden;
         newDescription += '# Not skipping CQ checks because original CL ' +
                           'landed > 1 day ago.\n\n';
+      } else if (isReland) {
+        cqSpan.style = CQ_INPUT_STYLES.styleHidden;
+        newDescription += '# Not skipping CQ checks because this is a ' +
+                          'reland.\n\n';
       } else {
-        newDescription += cqSkip;
+        // https://crbug.com/1075741 Only include CQ control trailers if the
+        // reverted change is recent enough and it's not reland.
+        newDescription += 'No-Presubmit: true\nNo-Tree-Checks: true\n' +
+                          'No-Try: true\n';
       }
 
       // Add previously-constructed trailers.
