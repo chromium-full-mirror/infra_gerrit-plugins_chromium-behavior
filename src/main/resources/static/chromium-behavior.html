@@ -103,9 +103,8 @@
       }
       let changeActions = PLUGIN.changeActions();
       return PLUGIN.restApi().post(url, body).then(function() {
-        // TODO(agable): Use real plugin API to reload change when
-        // available. See
-        // https://bugs.chromium.org/p/gerrit/issues/detail?id=6689
+        // TODO(http://crbug.com/gerrit/6689): Use real plugin API to reload
+        // change when available.
         changeActions._el.dispatchEvent(new CustomEvent(
             'reload-change',
             {detail: {action: 'reload-change'}, bubbles: false}));
@@ -123,7 +122,7 @@
      * @returns {string} all found trailers in normalized form (e.g. 'Bug: 1')
      */
     const getTrailer = function(message, token) {
-      // TODO(agable): Remove support for parsing CAPS= style tags.
+      // TODO(http://crbug.com/753425): Remove support for CAPS= style tags.
       var caps = token.replace(/-/g, '_').toUpperCase();
       var trailerRegexp = new RegExp(
         `^[ \t]*((${token}:|${caps}=)[ \t]*(.*))$`, 'gm');
