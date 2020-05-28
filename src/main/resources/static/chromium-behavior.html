@@ -710,6 +710,9 @@
         newDescription += '# Not skipping CQ checks because original CL ' +
                           'landed > 1 day ago.\n\n';
       } else if (isReland) {
+        alert('Note: The CL will not be automatically sent to the CQ and ' +
+              'the CQ checks will not be skipped because it is a reland ' +
+              '(revert of a revert).');
         cqSpan.style = CQ_INPUT_STYLES.styleHidden;
         newDescription += '# Not skipping CQ checks because this is a ' +
                           'reland.\n\n';
