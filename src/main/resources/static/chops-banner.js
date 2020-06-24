@@ -102,7 +102,8 @@ export class ChopsBanner {
     try {
       const resp = await this.client.getLiveAnnouncements(this.chopsAnnouncementsPlatform);
       // Only show announcements that weren't part of a banner that got closed.
-      this.shownAnnouncements = resp.announcements.filter(ann => (
+      const announcements = resp.announcements || [];
+      this.shownAnnouncements = announcements.filter(ann => (
         (!announcementCookieExists(ann.id))));
       const messages = this.shownAnnouncements.map(ann => ann.messageContent);
       this.message.textContent = messages.join('\r\n');
