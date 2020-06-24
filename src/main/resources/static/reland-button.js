@@ -83,8 +83,11 @@ function installRelandButton(plugin, change, changeActions) {
     } catch (err) {
       changeActions.setLabel(newKey, 'Can\'t reland');
       changeActions.setEnabled(newKey, false);
-      changeActions._el.dispatchEvent(new CustomEvent('show-alert',
-          {detail: {message: 'Cannot reland: ' + err}, bubbles: true}));
+      changeActions._el.dispatchEvent(new CustomEvent('show-alert', {
+        detail: {message: 'Cannot reland: ' + err},
+        composed: true,
+        bubbles: true,
+      }));
       throw err;
     }
   }
