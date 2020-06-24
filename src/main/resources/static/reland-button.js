@@ -49,7 +49,8 @@ export async function maybeInstallReland(plugin, change) {
  * action changes
  */
 function installRelandButton(plugin, change, changeActions) {
-  let newKey = changeActions.add(changeActions.ActionType.CHANGE, 'Reland');
+  let newKey = changeActions.add(
+      changeActions.ActionType.CHANGE, 'Create Reland');
   changeActions.setEnabled(newKey, true);
   const handler = async function() {
     changeActions.setEnabled(newKey, false);
