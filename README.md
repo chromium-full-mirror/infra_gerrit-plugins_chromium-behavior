@@ -1,5 +1,19 @@
 # Chrome/Chromium behavior theme for Gerrit
 
-## To use with the local testsite
+## To run unit tests
 
-    ln -s /path/to/chromium-behavior.html /path/to/gerrit_testsite/plugins/chromium_behavior.html
+```
+$ npm wct-test
+```
+
+## To test with Gerrit FE Dev Helper
+Make sure the plugin is installed in plugins/ of Gerrit repository.
+
+```
+$ cd ../.. # Gerrit root directory
+$ bazel build plugins/chromium-behavior:chromium-behavior
+$ cp -f bazel-bin/plugins/chromium-behavior/chromium-behavior-bundle.js plugins/
+$ cd plugins/chromium-behavior
+$ run-with-prod-data.sh
+```
+
