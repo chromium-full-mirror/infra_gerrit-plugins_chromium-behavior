@@ -9,7 +9,7 @@ const LGTM = 'lgtm';
 export function installLgtmWatcher(replyApi) {
   let autoAdded = false;
 
-  replyApi.addReplyTextChangedCallback(text => {
+  replyApi.addReplyTextChangedCallback((text) => {
     const labelValue = replyApi.getLabelValue(REVIEW_LABEL);
     if (!labelValue) {
       return;

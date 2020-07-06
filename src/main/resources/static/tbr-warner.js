@@ -12,10 +12,10 @@ const _TBR_REGEX = /^\s*(TBR=|Tbr:).*$/mg;
  * @param {string} message: the newly-set commit message
  */
 export function warnAboutTbr(change, message) {
-  let match = _TBR_REGEX.exec(message);
+  const match = _TBR_REGEX.exec(message);
   if (match && change.labels[REVIEW_LABEL] &&
       change.labels[REVIEW_LABEL].approved == null) {
     alert('You have added a TBR line. You must also approve ' +
           'this change for it to be submittable.');
   }
-};
+}

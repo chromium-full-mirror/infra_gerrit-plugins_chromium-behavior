@@ -13,9 +13,11 @@ let _CUSTOM_RELAND_KEY = null;
  * @param {ChangeInfo} change: the object for the current change
  */
 export async function maybeInstallReland(plugin, change) {
-  if (change.status !== STATUS_SUBMITTED) { return; }
+  if (change.status !== STATUS_SUBMITTED) {
+    return;
+  }
 
-  let changeActions = plugin.changeActions();
+  const changeActions = plugin.changeActions();
 
   if (_CUSTOM_RELAND_KEY !== null) {
     changeActions.remove(_CUSTOM_RELAND_KEY);
@@ -29,15 +31,17 @@ export async function maybeInstallReland(plugin, change) {
 
   if (currentUser.email !== change.owner.email &&
       !isLabelVotePermitted(change, REVIEW_LABEL,
-                            '+' + reviewLabelMaxValue)) {
+          '+' + reviewLabelMaxValue)) {
     changeActions.removePrimaryActionKey(changeActions.ChangeActions.REVERT);
-    changeActions.setActionOverflow(changeActions.ActionType.CHANGE,
-                                    changeActions.ChangeActions.REVERT,
-                                    true);
+    changeActions.setActionOverflow(
+        changeActions.ActionType.CHANGE,
+        changeActions.ChangeActions.REVERT,
+        true);
     changeActions.removePrimaryActionKey(_CUSTOM_RELAND_KEY);
-    changeActions.setActionOverflow(changeActions.ActionType.CHANGE,
-                                    _CUSTOM_RELAND_KEY,
-                                    true);
+    changeActions.setActionOverflow(
+        changeActions.ActionType.CHANGE,
+        _CUSTOM_RELAND_KEY,
+        true);
   }
 }
 
@@ -49,30 +53,30 @@ export async function maybeInstallReland(plugin, change) {
  * action changes
  */
 function installRelandButton(plugin, change, changeActions) {
-  let newKey = changeActions.add(
+  const newKey = changeActions.add(
       changeActions.ActionType.CHANGE, 'Create Reland');
   changeActions.setEnabled(newKey, true);
   const handler = async function() {
     changeActions.setEnabled(newKey, false);
     changeActions.setLabel(newKey, 'Reopening...');
-    let orig = (
-        change.revisions[change.current_revision].commit.message.trim());
-    let subject = 'Reland "' + change.subject + '"\n\n';
-    let disclaimer = (
-        'This is a reland of ' + change.current_revision + '\n\n' +
+    const orig = (
+      change.revisions[change.current_revision].commit.message.trim());
+    const subject = 'Reland "' + change.subject + '"\n\n';
+    const disclaimer = (
+      'This is a reland of ' + change.current_revision + '\n\n' +
         'Original change\'s description:\n');
-    let quote = orig.replace(/^/gm, '> ');
+    const quote = orig.replace(/^/gm, '> ');
     let message = subject + disclaimer + quote;
-    let bugFooter = getTrailer(orig, 'Bug');
-    let cqFooter = getTrailer(orig, 'Cq-Include-Trybots');
+    const bugFooter = getTrailer(orig, 'Bug');
+    const cqFooter = getTrailer(orig, 'Cq-Include-Trybots');
     if (bugFooter || cqFooter) {
       message += '\n\n' + bugFooter + cqFooter;
     }
-    let url = (
-        '/changes/' + change._number + '/revisions/' +
+    const url = (
+      '/changes/' + change._number + '/revisions/' +
         change.revisions[change.current_revision]._number +
         '/cherrypick');
-    let body = {
+    const body = {
       message: message.trim(),
       destination: change.branch,
       keep_reviewers: true,
@@ -90,7 +94,7 @@ function installRelandButton(plugin, change, changeActions) {
       }));
       throw err;
     }
-  }
+  };
   changeActions.addTapListener(newKey, handler);
   _CUSTOM_RELAND_KEY = newKey;
 }

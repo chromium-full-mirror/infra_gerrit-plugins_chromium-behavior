@@ -38,8 +38,8 @@ export function installAutoSubmit(plugin, change) {
 
   // Save the change's CR and CQ label max values for easy access from
   // different functions.
-  REVIEW_LABEL_MAX_VALUE = getLabelMaxValue(change, REVIEW_LABEL)
-  CQ_LABEL_MAX_VALUE = getLabelMaxValue(change, CQ_LABEL)
+  REVIEW_LABEL_MAX_VALUE = getLabelMaxValue(change, REVIEW_LABEL);
+  CQ_LABEL_MAX_VALUE = getLabelMaxValue(change, CQ_LABEL);
 
   if (REVIEW_LABEL_MAX_VALUE === 0 || CQ_LABEL_MAX_VALUE === 0 ||
       getLabelMaxValue(change, AUTOSUBMIT_LABEL) !== AS_LABEL_MAX_VALUE) {
@@ -50,7 +50,7 @@ export function installAutoSubmit(plugin, change) {
 
   if (!isLabelVotePermitted(change, CQ_LABEL, '+' + CQ_LABEL_MAX_VALUE) ||
       !isLabelVotePermitted(change, REVIEW_LABEL,
-                            '+' + REVIEW_LABEL_MAX_VALUE)) {
+          '+' + REVIEW_LABEL_MAX_VALUE)) {
     // Exit early if user does not have necessary permissions to CR+1
     // and CQ+2.
     return;
@@ -64,7 +64,7 @@ export function installAutoSubmit(plugin, change) {
   // automatically added.
   const replyApi = plugin.changeReply();
   replyApi.addLabelValuesChangedCallback(
-      labelValuesCallback(plugin, replyApi, change))
+      labelValuesCallback(plugin, replyApi, change));
 
   // Replace the CR+1 button with a custom handler on the main page.
   replaceQuickApproveButton(plugin, change);
@@ -79,11 +79,11 @@ async function checkIfApprovedByAllOtherReviewers(plugin, change) {
   if (change.reviewers && change.reviewers.REVIEWER &&
       change.labels[REVIEW_LABEL].all) {
     // Gather account_emails of all approvers.
-    const approver_emails = [];
+    const approverEmails = [];
     for (let i=0; i<change.labels[REVIEW_LABEL].all.length; i++) {
       if (change.labels[REVIEW_LABEL].all[i].value ===
           REVIEW_LABEL_MAX_VALUE) {
-        approver_emails.push(change.labels[REVIEW_LABEL].all[i].email);
+        approverEmails.push(change.labels[REVIEW_LABEL].all[i].email);
       }
     }
     // Get the account_email of the current user and use that to determine
@@ -91,21 +91,21 @@ async function checkIfApprovedByAllOtherReviewers(plugin, change) {
     try {
       const resp = await plugin.restApi().get('/accounts/self/detail');
       let approvedByAllOtherReviewers = true;
-      const current_user_email = resp.email;
+      const currentUserEmail = resp.email;
       // Check to see if any reviewer, other than the current user and the
       // change owner, has not approved the change yet.
       for (let i=0; i<change.reviewers.REVIEWER.length; i++) {
-        const reviewer_email = change.reviewers.REVIEWER[i].email;
-        if (reviewer_email != current_user_email &&
-            reviewer_email != change.owner.email &&
-            !approver_emails.includes(reviewer_email)) {
+        const reviewerEmail = change.reviewers.REVIEWER[i].email;
+        if (reviewerEmail != currentUserEmail &&
+            reviewerEmail != change.owner.email &&
+            !approverEmails.includes(reviewerEmail)) {
           approvedByAllOtherReviewers = false;
           break;
         }
       }
       APPROVED_BY_ALL_OTHER_REVIEWERS = approvedByAllOtherReviewers;
     } catch (err) {
-      let changeActions = plugin.changeActions();
+      const changeActions = plugin.changeActions();
       changeActions._el.dispatchEvent(new CustomEvent('show-alert',
           {detail: {message: err}, bubbles: true}));
       throw err;
@@ -121,14 +121,14 @@ async function checkIfApprovedByAllOtherReviewers(plugin, change) {
 async function setApprovalLabels(plugin, sendToCQ) {
   // TODO(rmistry): Add getChangeNum to GrChangeActionsInterface?
   const changeNum = plugin.changeActions()._el.changeNum;
-  var url = '/changes/' + changeNum + '/revisions/current/review';
-  var body = {labels: {}};
+  const url = '/changes/' + changeNum + '/revisions/current/review';
+  const body = {labels: {}};
   body['labels'][REVIEW_LABEL] = '+' + REVIEW_LABEL_MAX_VALUE;
   body['drafts'] = 'PUBLISH';
   if (sendToCQ) {
     body['labels'][CQ_LABEL] = '+' + CQ_LABEL_MAX_VALUE;
   }
-  let changeActions = plugin.changeActions();
+  const changeActions = plugin.changeActions();
   try {
     await plugin.restApi().post(url, body);
     // TODO(http://crbug.com/gerrit/6689): Use real plugin API to reload
@@ -182,18 +182,18 @@ function labelValuesCallback(plugin, replyApi, change) {
       // comments and/or drafts.
       if (value === '+' + REVIEW_LABEL_MAX_VALUE && autoSubmitApproved &&
           !ownerDeselectedAutoSubmit) {
-        const unresolved_msg = 'This change has unresolved comments ' +
+        const unresolvedMsg = 'This change has unresolved comments ' +
                                'and/or drafts. Not triggering ' +
                                'AutoSubmit.';
         if (refreshedChangeObj.unresolved_comment_count !== 0) {
-          replyApi.showMessage(unresolved_msg);
+          replyApi.showMessage(unresolvedMsg);
         } else {
           const drafts = await getChangeDrafts(plugin);
           if (Object.keys(drafts).length === 0) {
             replyApi.setLabelValue(CQ_LABEL, '+' + CQ_LABEL_MAX_VALUE);
             replyApi.showMessage(getSendToCQReplyDialogMsg());
           } else {
-            replyApi.showMessage(unresolved_msg);
+            replyApi.showMessage(unresolvedMsg);
           }
         }
       }
@@ -216,9 +216,9 @@ function getSendToCQReplyDialogMsg() {
   let sendToCQMsg = 'This change\'s owner has enabled Auto-Submit. ' +
                     'Your approval will also set CQ+' +
                     CQ_LABEL_MAX_VALUE +
-                    '. Unselect that if you don\'t want to trigger it.'
+                    '. Unselect that if you don\'t want to trigger it.';
   if (!APPROVED_BY_ALL_OTHER_REVIEWERS) {
-    sendToCQMsg += '\nNote: Not all reviewers have approved this change!'
+    sendToCQMsg += '\nNote: Not all reviewers have approved this change!';
   }
   return sendToCQMsg;
 }
@@ -232,7 +232,7 @@ function getSendToCQReplyDialogMsg() {
 function isAutoSubmitApproved(change, replyApi) {
   return (replyApi.getLabelValue(AUTOSUBMIT_LABEL) ===
               '+' + AS_LABEL_MAX_VALUE ||
-          getChangeLabel(change, AUTOSUBMIT_LABEL).approved)
+          getChangeLabel(change, AUTOSUBMIT_LABEL).approved);
 }
 
 /**
@@ -240,7 +240,7 @@ function isAutoSubmitApproved(change, replyApi) {
  * a custom handler that prompts if AS+1 is set.
  */
 async function replaceQuickApproveButton(plugin, change) {
-  let changeActions = plugin.changeActions();
+  const changeActions = plugin.changeActions();
 
   // Make sure the old quick approve button is hidden.
   changeActions.hideQuickApproveAction();
@@ -248,14 +248,14 @@ async function replaceQuickApproveButton(plugin, change) {
   try {
     const resp = await plugin.restApi().get('/accounts/self/detail');
     // See if the current user has approved the change.
-    let approved_by_current_user = false;
+    let approvedByCurrentUser = false;
     if (change.labels[REVIEW_LABEL].all) {
       for (let i=0; i<change.labels[REVIEW_LABEL].all.length; i++) {
         if (change.labels[REVIEW_LABEL].all[i].value ===
             REVIEW_LABEL_MAX_VALUE) {
           if (resp._account_id ==
               change.labels[REVIEW_LABEL].all[i]._account_id) {
-            approved_by_current_user = true;
+            approvedByCurrentUser = true;
             break;
           }
         }
@@ -263,13 +263,13 @@ async function replaceQuickApproveButton(plugin, change) {
     }
 
     if (getChangeLabel(change, REVIEW_LABEL).approved &&
-        approved_by_current_user) {
+        approvedByCurrentUser) {
       if (CUSTOM_QUICK_APPROVE_KEY !== null) {
         // The custom button is visible but should be now removed because
         // the user set CR+1.
         changeActions.remove(CUSTOM_QUICK_APPROVE_KEY);
         changeActions.removeTapListener(CUSTOM_QUICK_APPROVE_KEY);
-        CUSTOM_QUICK_APPROVE_KEY =  null;
+        CUSTOM_QUICK_APPROVE_KEY = null;
       }
       // Do not create a new button because this user already set CR+1.
       return;
@@ -279,8 +279,9 @@ async function replaceQuickApproveButton(plugin, change) {
     }
 
     // Create the custom quick approve button.
-    const key = changeActions.add(changeActions.ActionType.CHANGE,
-                                  'Code-Review+' + REVIEW_LABEL_MAX_VALUE);
+    const key = changeActions.add(
+        changeActions.ActionType.CHANGE,
+        'Code-Review+' + REVIEW_LABEL_MAX_VALUE);
     changeActions.setEnabled(key, true);
     changeActions.addTapListener(
         key, quickApproveHandler(plugin, changeActions, key));
@@ -288,7 +289,7 @@ async function replaceQuickApproveButton(plugin, change) {
         changeActions.ActionType.CHANGE, key, -3);
     CUSTOM_QUICK_APPROVE_KEY = key;
   } catch (err) {
-    let changeActions = plugin.changeActions();
+    const changeActions = plugin.changeActions();
     changeActions._el.dispatchEvent(new CustomEvent('show-alert',
         {detail: {message: err}, bubbles: true}));
     throw err;
@@ -331,13 +332,13 @@ class AutosubmitPopup extends Polymer.Element {
   }
 
   static get is() {
-      return 'autosubmit-popup';
+    return 'autosubmit-popup';
   }
 
   static get properties() {
     return {
-        unresolvedCommentsOrDrafts: Boolean,
-    }
+      unresolvedCommentsOrDrafts: Boolean,
+    };
   }
 
   ready() {

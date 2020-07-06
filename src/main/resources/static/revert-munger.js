@@ -10,7 +10,7 @@ const CQ_INPUT_STYLES = {
   styleCheck: 'margin-left: 8px;',
   styleBlock: 'display: block;',
   styleHidden: 'display: none;',
-}
+};
 
 const CQ_SPAN = document.createElement('span');
 CQ_SPAN.style = CQ_INPUT_STYLES.styleSpan;
@@ -45,16 +45,16 @@ export function interceptRevertMessage(change, revertMsg, originalMsg) {
     return revertMsg;
   }
   // Add email-style quoting ('> ') in front of the original commit text.
-  let originalCommitText = originalMsg.trim().replace(/^/gm, '> ');
+  const originalCommitText = originalMsg.trim().replace(/^/gm, '> ');
 
   // Start constructing the revert change description.
 
   // Show reverts-of-reverts as relands instead.
-  let originalRevertMsg = revertMsg;
+  const originalRevertMsg = revertMsg;
   revertMsg = revertMsg.replace(
       /^Revert "Revert "(.*)""/, 'Reland "$1"');
 
-  let isReland = (originalRevertMsg !== revertMsg);
+  const isReland = (originalRevertMsg !== revertMsg);
 
   let newDescription =
       revertMsg + '\n' +
@@ -86,14 +86,14 @@ export function interceptRevertMessage(change, revertMsg, originalMsg) {
   reviewers = reviewers.filter(function(item, pos, self) {
     return self.indexOf(item) === pos;
   });
-  let tbrLine = 'TBR=' + reviewers.join(',') + '\n\n';
+  const tbrLine = 'TBR=' + reviewers.join(',') + '\n\n';
   newDescription += tbrLine;
 
   // Carry over original trybots trailer.
-  let includeLine = getTrailer(originalMsg, 'Cq-Include-Trybots');
+  const includeLine = getTrailer(originalMsg, 'Cq-Include-Trybots');
 
-  let submittedDate = new Date(change.submitted + ' UTC');
-  let diffSeconds = (Date.now() - submittedDate) / 1000;
+  const submittedDate = new Date(change.submitted + ' UTC');
+  const diffSeconds = (Date.now() - submittedDate) / 1000;
   if (diffSeconds > 24 * 60 * 60) {
     alert('Note: The CL will not be automatically sent to the CQ and ' +
           'the CQ checks will not be skipped because this CL landed ' +
@@ -128,7 +128,7 @@ export function interceptRevertMessage(change, revertMsg, originalMsg) {
  * @returns {LabelInfo} the labels to set on the new revert
  */
 export function approveAndSubmitRevert(change) {
-  let labels = {};
+  const labels = {};
   // Auto-approve reverts.
   labels[REVIEW_LABEL] = getLabelMaxValue(change, REVIEW_LABEL);
   // Immediately send to CQ only if CQ_CHECK is checked.

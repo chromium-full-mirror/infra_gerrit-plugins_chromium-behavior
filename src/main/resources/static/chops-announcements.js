@@ -5,7 +5,7 @@ const ANNOUNCEMENT_URL = 'https://chopsdash.appspot.com/prpc/dashboard.ChopsAnno
 const HEADERS = {
   'accept': 'application/json',
   'content-type': 'application/json',
-}
+};
 
 export class ChopsDashClient {
   // call() expects searchAnnouncementRequest to be an Object equivalent
@@ -24,13 +24,13 @@ export class ChopsDashClient {
     const xssiPrefix = ')]}\'';
     if (!rawResponseText.startsWith(xssiPrefix)) {
       throw new Error(
-        `Response body does not start with XSSI prefix: ${xssiPrefix}`);
+          `Response body does not start with XSSI prefix: ${xssiPrefix}`);
     }
     return JSON.parse(rawResponseText.substr(xssiPrefix.length));
   }
 
   async getLiveAnnouncements(platformName) {
     return this._call(
-      {retired: false, platformName: platformName});
+        {retired: false, platformName: platformName});
   }
-};
+}

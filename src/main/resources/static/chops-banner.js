@@ -2,38 +2,39 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import {ChopsDashClient} from './chops-announcements.js'
+import {ChopsDashClient} from './chops-announcements.js';
 
 const BANNER_STYLES = {
-    styleBanner:
+  styleBanner:
       'background: pink;' +
       'text-align: center;' +
       'font-size: 15px;' +
       'white-space: pre-wrap;',
-    styleCloseBtn:
+  styleCloseBtn:
       'position: absolute;' +
       'right: 5px;' +
       'top: 1px;' +
       'color: #777;' +
       'cursor: pointer;' +
       'visibility: hidden;',
-    styleMessage: 'margin: 0px;',
+  styleMessage: 'margin: 0px;',
 };
 
 const REFRESH_TIME_MIN = 5;
 const MINUTE_INTERVAL = 60 * 1000;
 
 function setClosedBannerCookie(announcementId) {
-  let tomorrow = new Date();
+  const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  document.cookie = `announcement${announcementId}=closed; expires=${tomorrow.toUTCString()};`;
+  document.cookie = `announcement${announcementId}=closed; ` +
+                    `expires=${tomorrow.toUTCString()};`;
 }
 
 function getAnnouncementCookie(announcementId) {
   const decodedCookie = decodeURIComponent(document.cookie);
   const cookiesList = decodedCookie.split(';');
   const prefix = `announcement${announcementId}=`;
-  const matchingCookie = cookiesList.find(cookie => {
+  const matchingCookie = cookiesList.find((cookie) => {
     cookie = cookie.trim();
     if (cookie.startsWith(prefix)) {
       return true;
@@ -79,12 +80,12 @@ export class ChopsBanner {
     this.shownAnnouncements = [];
 
     // Set up banner element
-    let banner = element.appendChild(document.createElement('div'));
+    const banner = element.appendChild(document.createElement('div'));
     banner.style = BANNER_STYLES.styleBanner;
 
     this.message = banner.appendChild(document.createElement('p'));
     this.message.style = BANNER_STYLES.styleMessage;
-    this.closeBtn = banner.appendChild(document.createElement('span'))
+    this.closeBtn = banner.appendChild(document.createElement('span'));
     this.closeBtn.textContent = 'x';
     this.closeBtn.style = BANNER_STYLES.styleCloseBtn;
 
@@ -96,21 +97,23 @@ export class ChopsBanner {
     setInterval(() => {
       this.updateBanner();
     }, REFRESH_TIME_MIN * MINUTE_INTERVAL);
-  };
+  }
 
   async updateBanner() {
     try {
-      const resp = await this.client.getLiveAnnouncements(this.chopsAnnouncementsPlatform);
+      const resp = await this.client.getLiveAnnouncements(
+          this.chopsAnnouncementsPlatform);
       // Only show announcements that weren't part of a banner that got closed.
       const announcements = resp.announcements || [];
-      this.shownAnnouncements = announcements.filter(ann => (
+      this.shownAnnouncements = announcements.filter((ann) => (
         (!announcementCookieExists(ann.id))));
-      const messages = this.shownAnnouncements.map(ann => ann.messageContent);
+      const messages = this.shownAnnouncements.map((ann) => ann.messageContent);
       this.message.textContent = messages.join('\r\n');
       this.closeBtn.style.visibility = messages.length ? 'visible' : 'hidden';
-    } catch(e) {
+    } catch (e) {
       console.log(e);
-      this.message.textContent = 'Unable to get outage announcements from ChOpsDash.';
+      this.message.textContent = 'Unable to get outage announcements ' +
+                                 'from ChOpsDash.';
       this.closeBtn.style.visibility = 'visible';
     }
   }
@@ -118,7 +121,7 @@ export class ChopsBanner {
   closeBanner() {
     this.message.textContent = '';
     // Add a cookie for announcements in the banner so they don't reappear.
-    this.shownAnnouncements.forEach(ann => setClosedBannerCookie(ann.id));
+    this.shownAnnouncements.forEach((ann) => setClosedBannerCookie(ann.id));
     this.shownAnnouncements = [];
     this.closeBtn.style.visibility = 'hidden';
   }

@@ -15,6 +15,16 @@
         "sourceType": "module"
     },
     "rules": {
+        "max-len": [
+            "error",
+            80,
+            2,
+            {
+                "ignoreComments": true,
+                "ignorePattern": "^import .*;$",
+                "ignoreUrls": true
+            }
+        ],
         "require-jsdoc": "off",
         "valid-jsdoc": "off"
     }

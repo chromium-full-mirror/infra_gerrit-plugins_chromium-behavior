@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 // Common constants and helper functions used by multiple behaviors below.
-let PLUGIN = null;
 export const REVIEW_LABEL = 'Code-Review';
 export const CQ_LABEL = 'Commit-Queue';
 export const STATUS_SUBMITTED = 'MERGED';
@@ -42,12 +41,12 @@ export function getLabelMaxValue(change, labelName) {
  */
 export function getTrailer(message, token) {
   // TODO(http://crbug.com/753425): Remove support for CAPS= style tags.
-  var caps = token.replace(/-/g, '_').toUpperCase();
-  var trailerRegexp = new RegExp(
-    `^[ \t]*((${token}:|${caps}=)[ \t]*(.*))$`, 'gm');
-  var collection = new Set();
-  var collect = function(match, _wholeGroup, _keyGroup, valueGroup) {
-    valueGroup.split(/\s*,+\s*/).forEach(function (value) {
+  const caps = token.replace(/-/g, '_').toUpperCase();
+  const trailerRegexp = new RegExp(
+      `^[ \t]*((${token}:|${caps}=)[ \t]*(.*))$`, 'gm');
+  const collection = new Set();
+  const collect = function(match, _wholeGroup, _keyGroup, valueGroup) {
+    valueGroup.split(/\s*,+\s*/).forEach(function(value) {
       if (value) {
         collection.add(value);
       }
@@ -73,7 +72,7 @@ export function getChangeLabel(change, labelName) {
  */
 export function getChangeObj(plugin) {
   const changeNum = plugin.changeActions()._el.changeNum;
-  var  url = '/changes/' + changeNum + '/detail';
+  const url = '/changes/' + changeNum + '/detail';
   return plugin.restApi().get(url);
 }
 
@@ -83,6 +82,6 @@ export function getChangeObj(plugin) {
  */
 export function getChangeDrafts(plugin) {
   const changeNum = plugin.changeActions()._el.changeNum;
-  var  url = '/changes/' + changeNum + '/drafts';
+  const url = '/changes/' + changeNum + '/drafts';
   return plugin.restApi().get(url);
 }
