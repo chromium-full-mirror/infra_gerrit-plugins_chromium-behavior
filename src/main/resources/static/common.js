@@ -54,10 +54,7 @@ export function getTrailer(message, token) {
     });
   };
   message.replace(trailerRegexp, collect);
-  if (collection.size > 0) {
-    return token + ': ' + Array.from(collection).join(', ') + '\n';
-  }
-  return '';
+  return Array.from(collection).map((entry) => `${token}: ${entry}\n`).join('');
 }
 
 /**

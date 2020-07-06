@@ -1,0 +1,23 @@
+{
+  "name": "chromium-behavior-plugin",
+  "description": "Chromium Behaviour Gerrit plugin",
+  "browser": true,
+  "scripts": {
+    "test": "polymer serve",
+    "eslint": "../../node_modules/eslint/bin/eslint.js --ext .html,.js ./src/main/resources/static/",
+    "wct-test": "npm i && npx polymer test -l chrome"
+  },
+  "dependencies": {
+    "@polymer/polymer": "^3.0.0"
+  },
+  "devDependencies": {
+    "@webcomponents/webcomponentsjs": "^2.0.0",
+    "chai": "^4.2.0",
+    "mocha": "^6.1.4",
+    "wct-mocha": "^1.0.1",
+    "wd": "^1.12.1",
+    "eslint": "^6.6.0",
+    "polymer-cli": "^1.9.11"
+  },
+  "license": "Apache-2.0"
+}
