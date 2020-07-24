@@ -6,6 +6,7 @@ import {ChopsDashClient} from './chops-announcements.js';
 
 const BANNER_STYLES = {
   styleBanner:
+      'color: black;' +
       'background: pink;' +
       'text-align: center;' +
       'font-size: 15px;' +
