@@ -134,8 +134,7 @@ async function setApprovalLabels(plugin, sendToCQ) {
     // TODO(http://crbug.com/gerrit/6689): Use real plugin API to reload
     // change when available.
     changeActions._el.dispatchEvent(new CustomEvent(
-        'reload-change',
-        {detail: {action: 'reload-change'}, bubbles: false}));
+        'reload', {bubbles: false, composed: true}));
   } catch (err) {
     changeActions._el.dispatchEvent(new CustomEvent('show-alert',
         {detail: {message: err}, bubbles: true}));
