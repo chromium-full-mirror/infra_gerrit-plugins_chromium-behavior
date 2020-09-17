@@ -44,8 +44,10 @@ export function interceptRevertMessage(change, revertMsg, originalMsg) {
     CQ_SPAN.style = CQ_INPUT_STYLES.styleHidden;
     return revertMsg;
   }
-  // Add email-style quoting ('> ') in front of the original commit text.
-  const originalCommitText = originalMsg.trim().replace(/^/gm, '> ');
+  // Add email-style quoting ('> ') in front of the original commit text. Empty
+  // lines might end up with '> ' so change them into '>'.
+  const originalCommitText = originalMsg.trim().replace(/^/gm, '> ')
+                                               .replace(/^> $/gm, '>');
 
   // Start constructing the revert change description.
 

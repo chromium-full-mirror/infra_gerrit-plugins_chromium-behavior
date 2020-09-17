@@ -65,7 +65,7 @@ function installRelandButton(plugin, change, changeActions) {
     const disclaimer = (
       'This is a reland of ' + change.current_revision + '\n\n' +
         'Original change\'s description:\n');
-    const quote = orig.replace(/^/gm, '> ');
+    const quote = orig.replace(/^/gm, '> ').replace(/^> $/gm, '>');
     let message = subject + disclaimer + quote;
     const bugFooter = getTrailer(orig, 'Bug');
     const cqFooter = getTrailer(orig, 'Cq-Include-Trybots');
