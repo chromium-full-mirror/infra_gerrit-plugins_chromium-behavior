@@ -5,8 +5,9 @@
 import {ChopsBanner} from './chops-banner.js';
 import {approveAndSubmitRevert, installCQCheckbox,
   interceptRevertMessage} from './revert-munger.js';
-import {installLgtmWatcher} from './lgtm-catcher.js';
+import {hideMoveChange} from './hide-move-change.js';
 import {installAutoSubmit} from './autosubmit.js';
+import {installLgtmWatcher} from './lgtm-catcher.js';
 import {maybeInstallReland} from './reland-button.js';
 import {warnAboutTbr} from './tbr-warner.js';
 
@@ -23,12 +24,9 @@ Gerrit.install((plugin) => {
 
   plugin.on('showchange', (change) => {
     installLgtmWatcher(plugin.changeReply());
-  });
-  plugin.on('showchange', (change) => {
     installAutoSubmit(plugin, change);
-  });
-  plugin.on('showchange', (change) => {
     maybeInstallReland(plugin, change);
+    hideMoveChange(plugin, change);
   });
   plugin.on('commitmsgedit', warnAboutTbr);
 });
