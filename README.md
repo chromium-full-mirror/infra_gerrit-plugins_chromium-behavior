@@ -1,3 +1,5 @@
+**Do not use this branch, use main branch instead**
+
 # Chrome/Chromium behavior theme for Gerrit
 
 ## To run unit tests
