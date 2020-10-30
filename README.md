@@ -16,4 +16,3 @@ $ cp -f bazel-bin/plugins/chromium-behavior/chromium-behavior-bundle.js plugins/
 $ cd plugins/chromium-behavior
 $ run-with-prod-data.sh
 ```
-
