@@ -88,8 +88,6 @@ export function interceptRevertMessage(change, revertMsg, originalMsg) {
   reviewers = reviewers.filter(function(item, pos, self) {
     return self.indexOf(item) === pos;
   });
-  const tbrLine = 'TBR=' + reviewers.join(',') + '\n\n';
-  newDescription += tbrLine;
 
   // Carry over original trybots trailer.
   const includeLine = getTrailer(originalMsg, 'Cq-Include-Trybots');
@@ -111,9 +109,12 @@ export function interceptRevertMessage(change, revertMsg, originalMsg) {
     newDescription += '# Not skipping CQ checks because this is a ' +
                       'reland.\n\n';
   } else {
-    // https://crbug.com/1075741 Only include CQ control trailers if the
+    // Only add TBR= and skip CQ control trailers if the
     // reverted change is recent enough and it's not reland.
-    newDescription += 'No-Presubmit: true\nNo-Tree-Checks: true\n' +
+    newDescription += 'TBR=' + reviewers.join(',') + '\n' +
+                      '\n' +
+                      'No-Presubmit: true\n' +
+                      'No-Tree-Checks: true\n' +
                       'No-Try: true\n';
   }
 
