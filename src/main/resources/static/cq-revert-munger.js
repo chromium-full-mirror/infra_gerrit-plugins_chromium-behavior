@@ -1,0 +1,109 @@
+// Copyright 2021 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+import {CQ_LABEL, getLabelMaxValue, getTrailer, REVIEW_LABEL,
+  quoteOriginalMessage} from './common.js';
+
+// A CQ checkbox for options to send revert immediately to CQ.
+const CQ_INPUT_STYLES = {
+  styleSpan: 'margin: 8px;',
+  styleCheck: 'margin-left: 8px;',
+  styleBlock: 'display: block;',
+  styleHidden: 'display: none;',
+};
+
+const CQ_SPAN = document.createElement('span');
+CQ_SPAN.style = CQ_INPUT_STYLES.styleSpan;
+CQ_SPAN.textContent = 'Automatically send revert change to CQ';
+
+const CQ_CHECK = document.createElement('input');
+CQ_CHECK.type = 'checkbox';
+CQ_CHECK.style = CQ_INPUT_STYLES.styleCheck;
+CQ_SPAN.appendChild(CQ_CHECK);
+
+/**
+ * Called when the confirm-revert-change element is added to the page.
+ * Adds the cq checkbox to the confirm revert change dialog.
+ * @param {element} element: the confirm-revert-change element.
+ */
+export function installCQCheckbox(element) {
+  // Add CQ checkbox to confirm-revert-dialog.
+  element.style = CQ_INPUT_STYLES.styleBlock;
+  element.appendChild(CQ_SPAN);
+}
+
+/**
+ * Called when the user clicks the "Revert" button to pull up the dialog.
+ * @param {ChangeInfo} change: the object for the current change
+ * @param {string} revertMsg: the default message Gerrit would use
+ * @param {string} originalMsg: the commit message of the original change
+ * @returns {string} used to populate the Revert dialog box
+ */
+export function cqInterceptRevertMessage(change, revertMsg, originalMsg) {
+  if (!change.labels[CQ_LABEL]) {
+    CQ_SPAN.style = CQ_INPUT_STYLES.styleHidden;
+    return revertMsg;
+  }
+
+  let newDescription = quoteOriginalMessage(revertMsg, originalMsg) + '\n\n';
+
+  // Only add TBR= and skip CQ control trailers if the
+  // reverted change is recent enough and it's not reland.
+  const submittedDate = new Date(change.submitted + ' UTC');
+  const diffSeconds = (Date.now() - submittedDate) / 1000;
+  if (diffSeconds > 24 * 60 * 60) {
+    alert('Note: The CL will not be automatically sent to the CQ and ' +
+          'the CQ checks will not be skipped because this CL landed ' +
+          'more than 1 day ago.');
+    CQ_SPAN.style = CQ_INPUT_STYLES.styleHidden;
+    newDescription += '# Not skipping CQ checks because original CL ' +
+                      'landed > 1 day ago.\n\n';
+  } else if (newDescription.startsWith('Reland "')) {
+    alert('Note: The CL will not be automatically sent to the CQ and ' +
+          'the CQ checks will not be skipped because it is a reland ' +
+          '(revert of a revert).');
+    CQ_SPAN.style = CQ_INPUT_STYLES.styleHidden;
+    newDescription += '# Not skipping CQ checks because this is a ' +
+                      'reland.\n\n';
+  } else {
+    // Construct new TBR tag.
+    let reviewers = (change.reviewers.REVIEWER || []).map(
+        (reviewer) => reviewer.email);
+    // Do not add Commit bots to TBR. See crbug.com/642739
+    reviewers = reviewers.filter(
+        (email) => email && !email.endsWith('commit-bot@chromium.org'));
+    reviewers.push(change.owner.email);
+    reviewers = Array.from(new Set(reviewers));
+
+    newDescription += 'TBR=' + reviewers.join(',') + '\n' +
+                      '\n' +
+                      'No-Presubmit: true\n' +
+                      'No-Tree-Checks: true\n' +
+                      'No-Try: true\n';
+  }
+
+  // Carry over bug lines.
+  newDescription += getTrailer(originalMsg, 'Bug');
+  newDescription += getTrailer(originalMsg, 'Issue');
+  // Carry over original trybots trailer.
+  newDescription += getTrailer(originalMsg, 'Cq-Include-Trybots');
+
+  return newDescription.trim();
+}
+
+/**
+ * Called when the Revert action has been completed.
+ * @param {ChangeInfo} change: the object representing the new revert
+ * @returns {LabelInfo} the labels to set on the new revert
+ */
+export function cqApproveAndSubmitRevert(change) {
+  const labels = {};
+  // Auto-approve reverts.
+  labels[REVIEW_LABEL] = getLabelMaxValue(change, REVIEW_LABEL);
+  // Immediately send to CQ only if CQ_CHECK is checked.
+  if (CQ_CHECK.checked) {
+    labels[CQ_LABEL] = getLabelMaxValue(change, CQ_LABEL);
+  }
+  return {labels};
+}

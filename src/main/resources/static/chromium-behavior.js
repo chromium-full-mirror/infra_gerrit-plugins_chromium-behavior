@@ -3,8 +3,10 @@
 // found in the LICENSE file.
 
 import {ChopsBanner} from './chops-banner.js';
-import {approveAndSubmitRevert, installCQCheckbox,
+import {approveAndSubmitRevert, installASCheckbox,
   interceptRevertMessage} from './revert-munger.js';
+import {cqApproveAndSubmitRevert, installCQCheckbox,
+  cqInterceptRevertMessage} from './cq-revert-munger.js';
 import {hideMoveChange} from './hide-move-change.js';
 import {installAutoSubmit} from './autosubmit.js';
 import {installLgtmWatcher} from './lgtm-catcher.js';
@@ -17,14 +19,23 @@ Gerrit.install((plugin) => {
   plugin.hook('banner').onAttached((el) => {
     chopsBanner.register(el);
   });
-  plugin.hook('confirm-revert-change').onAttached((el) => {
-    installCQCheckbox(el);
-  });
   plugin.hook('change-metadata-item').onAttached((el) => {
     maybeInstallCommitterWarning(el);
   });
-  plugin.on('revert', interceptRevertMessage);
-  plugin.on('postrevert', approveAndSubmitRevert);
+
+  let onConfirmRevertChange, onRevert, onPostRevert;
+  if (window.location.host === 'skia-review.googlesource.com') {
+    onConfirmRevert = installCQCheckbox;
+    onRevert = cqInterceptRevertMessage;
+    onPostRevert = cqApproveAndSubmitRevert;
+  } else {
+    onConfirmRevert = installASCheckbox;
+    onRevert = interceptRevertMessage;
+    onPostRevert = approveAndSubmitRevert;
+  }
+  plugin.hook('confirm-revert-change').onAttached(onConfirmRevertChange);
+  plugin.on('revert', onRevert);
+  plugin.on('postrevert', onPostRevert);
 
   plugin.on('showchange', (change) => {
     installLgtmWatcher(plugin.changeReply());

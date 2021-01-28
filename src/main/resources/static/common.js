@@ -4,6 +4,7 @@
 
 // Common constants and helper functions used by multiple behaviors below.
 export const REVIEW_LABEL = 'Code-Review';
+export const AS_LABEL = 'Auto-Submit';
 export const CQ_LABEL = 'Commit-Queue';
 export const STATUS_SUBMITTED = 'MERGED';
 
@@ -84,4 +85,21 @@ export function getChangeDrafts(plugin) {
   const changeNum = plugin.changeActions()._el.changeNum;
   const url = '/changes/' + changeNum + '/drafts';
   return plugin.restApi().get(url);
+}
+
+/**
+ * Add email-style quoting (> ) in front of the original commit message.
+ */
+export function quoteOriginalMessage(revertMsg, originalMsg) {
+  // Show reverts-of-reverts as relands instead.
+  let newMessage = revertMsg.replace(
+      /^Revert "Revert "(.*)""/, 'Reland "$1"');
+
+  newMessage += '\nOriginal change\'s description:\n';
+
+  // Add email-style quoting ('> ') in front of the original commit text. Empty
+  // lines might end up with '> ' so change them into '>'.
+  newMessage += originalMsg.trim().replace(/^/gm, '> ').replace(/^> $/gm, '>');
+
+  return newMessage;
 }
