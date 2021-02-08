@@ -12,15 +12,11 @@ import {installAutoSubmit} from './autosubmit.js';
 import {installLgtmWatcher} from './lgtm-catcher.js';
 import {maybeInstallReland} from './reland-button.js';
 import {warnAboutTbr} from './tbr-warner.js';
-import {maybeInstallCommitterWarning} from './committer-warner.js';
 
 Gerrit.install((plugin) => {
   const chopsBanner = new ChopsBanner(window.location.host);
   plugin.hook('banner').onAttached((el) => {
     chopsBanner.register(el);
-  });
-  plugin.hook('change-metadata-item').onAttached((el) => {
-    maybeInstallCommitterWarning(el);
   });
 
   let onConfirmRevertChange, onRevert, onPostRevert;
