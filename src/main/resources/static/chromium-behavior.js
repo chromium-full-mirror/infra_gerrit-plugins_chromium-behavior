@@ -19,7 +19,7 @@ Gerrit.install((plugin) => {
     chopsBanner.register(el);
   });
 
-  let onConfirmRevertChange, onRevert, onPostRevert;
+  let onConfirmRevert, onRevert, onPostRevert;
   if (window.location.host === 'skia-review.googlesource.com') {
     onConfirmRevert = installCQCheckbox;
     onRevert = cqInterceptRevertMessage;
@@ -29,7 +29,7 @@ Gerrit.install((plugin) => {
     onRevert = interceptRevertMessage;
     onPostRevert = approveAndSubmitRevert;
   }
-  plugin.hook('confirm-revert-change').onAttached(onConfirmRevertChange);
+  plugin.hook('confirm-revert-change').onAttached(onConfirmRevert);
   plugin.on('revert', onRevert);
   plugin.on('postrevert', onPostRevert);
 
