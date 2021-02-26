@@ -113,7 +113,7 @@ async function createReland(plugin, notify) {
   } catch (err) {
     changeActions.setLabel(_NEW_KEY, 'Can\'t reland');
     changeActions.setEnabled(_NEW_KEY, false);
-    changeActions._el.dispatchEvent(new CustomEvent('show-alert', {
+    changeActions.ensureEl().dispatchEvent(new CustomEvent('show-alert', {
       detail: {message: 'Cannot reland: ' + err.message},
       composed: true,
       bubbles: true,

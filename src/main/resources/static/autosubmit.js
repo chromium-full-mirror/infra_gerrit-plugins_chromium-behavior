@@ -106,7 +106,7 @@ async function checkIfApprovedByAllOtherReviewers(plugin, change) {
       APPROVED_BY_ALL_OTHER_REVIEWERS = approvedByAllOtherReviewers;
     } catch (err) {
       const changeActions = plugin.changeActions();
-      changeActions._el.dispatchEvent(new CustomEvent('show-alert',
+      changeActions.ensureEl().dispatchEvent(new CustomEvent('show-alert',
           {detail: {message: err}, bubbles: true}));
       throw err;
     }
@@ -120,7 +120,7 @@ async function checkIfApprovedByAllOtherReviewers(plugin, change) {
  */
 async function setApprovalLabels(plugin, sendToCQ) {
   // TODO(rmistry): Add getChangeNum to GrChangeActionsInterface?
-  const changeNum = plugin.changeActions()._el.changeNum;
+  const changeNum = plugin.changeActions().ensureEl().changeNum;
   const url = '/changes/' + changeNum + '/revisions/current/review';
   const body = {labels: {}};
   body['labels'][REVIEW_LABEL] = '+' + REVIEW_LABEL_MAX_VALUE;
@@ -133,10 +133,10 @@ async function setApprovalLabels(plugin, sendToCQ) {
     await plugin.restApi().post(url, body);
     // TODO(http://crbug.com/gerrit/6689): Use real plugin API to reload
     // change when available.
-    changeActions._el.dispatchEvent(new CustomEvent(
+    changeActions.ensureEl().dispatchEvent(new CustomEvent(
         'reload', {bubbles: false, composed: true}));
   } catch (err) {
-    changeActions._el.dispatchEvent(new CustomEvent('show-alert',
+    changeActions.ensureEl().dispatchEvent(new CustomEvent('show-alert',
         {detail: {message: err}, bubbles: true}));
     throw err;
   }
@@ -289,7 +289,7 @@ async function replaceQuickApproveButton(plugin, change) {
     CUSTOM_QUICK_APPROVE_KEY = key;
   } catch (err) {
     const changeActions = plugin.changeActions();
-    changeActions._el.dispatchEvent(new CustomEvent('show-alert',
+    changeActions.ensureEl().dispatchEvent(new CustomEvent('show-alert',
         {detail: {message: err}, bubbles: true}));
     throw err;
   }

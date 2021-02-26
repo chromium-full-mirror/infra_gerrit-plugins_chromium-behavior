@@ -72,7 +72,7 @@ export function getChangeLabel(change, labelName) {
  * Calls the server to get an updated change obj and returns its promise.
  */
 export function getChangeObj(plugin) {
-  const changeNum = plugin.changeActions()._el.changeNum;
+  const changeNum = plugin.changeActions().ensureEl().changeNum;
   const url = '/changes/' + changeNum + '/detail';
   return plugin.restApi().get(url);
 }
@@ -82,7 +82,7 @@ export function getChangeObj(plugin) {
  * calling user.
  */
 export function getChangeDrafts(plugin) {
-  const changeNum = plugin.changeActions()._el.changeNum;
+  const changeNum = plugin.changeActions().ensureEl().changeNum;
   const url = '/changes/' + changeNum + '/drafts';
   return plugin.restApi().get(url);
 }
