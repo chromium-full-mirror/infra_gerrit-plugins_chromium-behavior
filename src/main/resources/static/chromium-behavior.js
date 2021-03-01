@@ -20,18 +20,14 @@ Gerrit.install((plugin) => {
   });
 
   let onConfirmRevert, onRevert, onPostRevert;
-  const rubberStamperHosts = [
-    'chromium-review.googlesource.com',
-    'chrome-internal-review.googlesource.com',
-  ]
-  if (rubberStamperHosts.includes(window.location.host)) {
-    onConfirmRevert = installASCheckbox;
-    onRevert = interceptRevertMessage;
-    onPostRevert = approveAndSubmitRevert;
-  } else {
+  if (window.location.host === 'skia-review.googlesource.com') {
     onConfirmRevert = installCQCheckbox;
     onRevert = cqInterceptRevertMessage;
     onPostRevert = cqApproveAndSubmitRevert;
+  } else {
+    onConfirmRevert = installASCheckbox;
+    onRevert = interceptRevertMessage;
+    onPostRevert = approveAndSubmitRevert;
   }
   plugin.hook('confirm-revert-change').onAttached(onConfirmRevert);
   plugin.on('revert', onRevert);
