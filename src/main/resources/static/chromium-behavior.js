@@ -19,19 +19,22 @@ Gerrit.install((plugin) => {
     chopsBanner.register(el);
   });
 
-  let onConfirmRevert, onRevert, onPostRevert;
-  if (window.location.host === 'skia-review.googlesource.com') {
-    onConfirmRevert = installCQCheckbox;
-    onRevert = cqInterceptRevertMessage;
-    onPostRevert = cqApproveAndSubmitRevert;
-  } else {
-    onConfirmRevert = installASCheckbox;
-    onRevert = interceptRevertMessage;
-    onPostRevert = approveAndSubmitRevert;
-  }
-  plugin.hook('confirm-revert-change').onAttached(onConfirmRevert);
-  plugin.on('revert', onRevert);
-  plugin.on('postrevert', onPostRevert);
+  const rubberStamperHosts = ['chromium', 'chrome-internal'];
+  plugin.getServerInfo().then((config) => {
+    let onConfirmRevert, onRevert, onPostRevert;
+    if (rubberStamperHosts.includes(config.gerrit.instance_id)) {
+      onConfirmRevert = installASCheckbox;
+      onRevert = interceptRevertMessage;
+      onPostRevert = approveAndSubmitRevert;
+    } else {
+      onConfirmRevert = installCQCheckbox;
+      onRevert = cqInterceptRevertMessage;
+      onPostRevert = cqApproveAndSubmitRevert;
+    }
+    plugin.hook('confirm-revert-change').onAttached(onConfirmRevert);
+    plugin.on('revert', onRevert);
+    plugin.on('postrevert', onPostRevert);
+  });
 
   plugin.on('showchange', (change) => {
     installLgtmWatcher(plugin.changeReply());
