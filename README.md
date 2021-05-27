@@ -3,7 +3,7 @@
 ## To run unit tests
 
 ```
-$ npm wct-test
+$ npm run wct-test
 ```
 
 ## To test with Gerrit FE Dev Helper
