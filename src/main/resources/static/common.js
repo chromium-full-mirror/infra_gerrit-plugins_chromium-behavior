@@ -46,12 +46,8 @@ export function getTrailer(message, token) {
   const trailerRegexp = new RegExp(
       `^[ \t]*((${token}:|${caps}=)[ \t]*(.*))$`, 'gm');
   const collection = new Set();
-  const collect = function(match, _wholeGroup, _keyGroup, valueGroup) {
-    valueGroup.split(/\s*,+\s*/).forEach(function(value) {
-      if (value) {
-        collection.add(value);
-      }
-    });
+  const collect = function(_match, _wholeGroup, _keyGroup, valueGroup) {
+    collection.add(valueGroup);
   };
   message.replace(trailerRegexp, collect);
   return Array.from(collection).map((entry) => `${token}: ${entry}\n`).join('');
