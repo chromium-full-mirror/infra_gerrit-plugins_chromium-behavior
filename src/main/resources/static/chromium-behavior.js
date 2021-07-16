@@ -12,6 +12,7 @@ import {installAutoSubmit} from './autosubmit.js';
 import {installLgtmWatcher} from './lgtm-catcher.js';
 import {maybeInstallReland} from './reland-button.js';
 import {warnAboutTbr} from './tbr-warner.js';
+import {installSelfReviewWarner} from './self-review-warner.js';
 
 Gerrit.install((plugin) => {
   const chopsBanner = new ChopsBanner(window.location.host);
@@ -39,6 +40,7 @@ Gerrit.install((plugin) => {
   plugin.on('showchange', (change) => {
     installLgtmWatcher(plugin.changeReply());
     installAutoSubmit(plugin, change);
+    installSelfReviewWarner(plugin, change);
     maybeInstallReland(plugin, change);
     hideMoveChange(plugin, change);
   });
