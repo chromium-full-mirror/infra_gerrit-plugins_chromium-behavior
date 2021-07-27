@@ -13,7 +13,7 @@ const BANNER_STYLES = {
       'white-space: pre-wrap;',
   styleCloseBtn:
       'position: absolute;' +
-      'right: 5px;' +
+      'right: 10px;' +
       'top: 1px;' +
       'color: #777;' +
       'cursor: pointer;' +
@@ -87,10 +87,10 @@ export class ChopsBanner {
     this.message = banner.appendChild(document.createElement('p'));
     this.message.style = BANNER_STYLES.styleMessage;
     this.closeBtn = banner.appendChild(document.createElement('span'));
-    this.closeBtn.textContent = 'x';
+    this.closeBtn.textContent = 'X';
     this.closeBtn.style = BANNER_STYLES.styleCloseBtn;
 
-    this.closeBtn.addEventListener('click', this.closeBanner);
+    this.closeBtn.addEventListener('click', () => this.closeBanner());
     // Set up calls to chopsdash to fetch live announcements
     this.client = new ChopsDashClient();
 
