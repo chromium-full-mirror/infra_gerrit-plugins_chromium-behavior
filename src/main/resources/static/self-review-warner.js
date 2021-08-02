@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 import {
-  REVIEW_LABEL, getLabelMaxValue, getChangeLabel,
+  STATUS_SUBMITTED, REVIEW_LABEL, getLabelMaxValue, getChangeLabel,
   getChangeObj} from './common.js';
 
 const selfApprovalMsg =
@@ -12,6 +12,11 @@ const selfApprovalMsg =
   'submitted.';
 
 export function installSelfReviewWarner(plugin, change) {
+  // Don't alert on submitted changes.
+  if (change.status === STATUS_SUBMITTED) {
+    return;
+  }
+
   // Display an alert if the change is already self-approved.
   alertOnSelfApproval(change);
 

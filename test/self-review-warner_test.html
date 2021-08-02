@@ -1,0 +1,60 @@
+<!doctype html>
+<!--
+Copyright 2021 The Chromium Authors. All rights reserved.
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>self-review-warner test</title>
+
+    <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="../node_modules/web-component-tester/browser.js"></script>
+  </head>
+  <body>
+    <script type="module">
+      import {STATUS_SUBMITTED, REVIEW_LABEL} from '../src/main/resources/static/common.js';
+      import {installSelfReviewWarner} from '../src/main/resources/static/self-review-warner.js';
+
+      suite('self-review-warner test', () => {
+        let sandbox;
+
+        setup(() => {
+          sandbox = sinon.sandbox.create();
+        });
+
+        teardown(() => {
+          sandbox.restore();
+        });
+
+        test('warner does not alert on merged changes', () => {
+          const plugin = {
+            changeReply: sandbox.stub().returns({
+              addLabelValuesChangedCallback: () => ({}),
+            }),
+          };
+          const change = {
+            owner: {email: 'foo@bar.com'},
+            labels: {[REVIEW_LABEL]: {all: []}},
+          };
+
+          installSelfReviewWarner(plugin, {
+            status: STATUS_SUBMITTED,
+            ...change,
+          });
+          sinon.assert.notCalled(plugin.changeReply);
+
+          installSelfReviewWarner(plugin, {
+            status: 'NEW',
+            ...change,
+          });
+          sinon.assert.calledOnce(plugin.changeReply);
+        });
+      });
+    </script>
+
+  </body>
+</html>
