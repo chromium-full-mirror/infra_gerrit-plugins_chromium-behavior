@@ -16,8 +16,14 @@ found in the LICENSE file.
   </head>
   <body>
     <script type="module">
-      import {STATUS_SUBMITTED, REVIEW_LABEL} from '../src/main/resources/static/common.js';
-      import {installSelfReviewWarner} from '../src/main/resources/static/self-review-warner.js';
+      import {
+          STATUS_SUBMITTED,
+          REVIEW_LABEL,
+        } from '../src/main/resources/static/common.js';
+      import {
+          installSelfReviewWarner,
+          alertOnSelfApproval,
+        } from '../src/main/resources/static/self-review-warner.js';
 
       suite('self-review-warner test', () => {
         let sandbox;
@@ -53,8 +59,17 @@ found in the LICENSE file.
           });
           sinon.assert.calledOnce(plugin.changeReply);
         });
+
+        test('alertOnSelfApproval without votes', () => {
+          const stub = sandbox.stub(window, 'alert');
+          const change = {
+            owner: {email: 'foo@bar.com'},
+            labels: {[REVIEW_LABEL]: {}},
+          };
+          alertOnSelfApproval(change);
+          sinon.assert.notCalled(stub);
+        });
       });
     </script>
-
   </body>
 </html>

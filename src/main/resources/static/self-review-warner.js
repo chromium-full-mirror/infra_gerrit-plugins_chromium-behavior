@@ -38,9 +38,9 @@ export function installSelfReviewWarner(plugin, change) {
  * Displays an alert if the change is approved by its owner.
  * @param {object} change gr-change-view
  */
-function alertOnSelfApproval(change) {
+export function alertOnSelfApproval(change) {
   const maxValue = getLabelMaxValue(change, REVIEW_LABEL);
-  const isSelfApproved = getChangeLabel(change, REVIEW_LABEL).all.some(
+  const isSelfApproved = getChangeLabel(change, REVIEW_LABEL)?.all?.some(
     (vote) => vote.email === change.owner.email && vote.value === maxValue);
   if (isSelfApproved) {
     alert(selfApprovalMsg);
