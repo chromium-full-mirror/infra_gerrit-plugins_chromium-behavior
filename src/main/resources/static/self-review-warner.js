@@ -28,7 +28,7 @@ export function installSelfReviewWarner(plugin, change) {
     if (name !== REVIEW_LABEL || value !== maxValue) {
       return;
     }
-    getChangeObj(plugin).then((refreshedChange) => {
+    getChangeObj(plugin, change).then((refreshedChange) => {
       alertOnSelfApproval(refreshedChange);
     });
   });

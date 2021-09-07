@@ -118,10 +118,9 @@ async function checkIfApprovedByAllOtherReviewers(plugin, change) {
  * @param {bool} sendToCQ: Whether the change should also be sent to the CQ.
  * @returns {promise} Promise from the POST call.
  */
-async function setApprovalLabels(plugin, sendToCQ) {
+async function setApprovalLabels(plugin, change, sendToCQ) {
   // TODO(rmistry): Add getChangeNum to GrChangeActionsInterface?
-  const changeNum = plugin.changeActions().ensureEl().changeNum;
-  const url = '/changes/' + changeNum + '/revisions/current/review';
+  const url = `/changes/${change._number}/revisions/current/review`;
   const body = {labels: {}};
   body['labels'][REVIEW_LABEL] = '+' + REVIEW_LABEL_MAX_VALUE;
   body['drafts'] = 'PUBLISH';
@@ -175,7 +174,7 @@ function labelValuesCallback(plugin, replyApi, change) {
       // changes. Get the latest change object from the server to be sure we
       // are making the right decisions when displaying the quick approve
       // button (see crbug.com/820117).
-      const refreshedChangeObj = await getChangeObj(plugin);
+      const refreshedChangeObj = await getChangeObj(plugin, change);
       replaceQuickApproveButton(plugin, refreshedChangeObj);
       // If CR+1 and AS+1 then set CQ+2 if there are no unresolved
       // comments and/or drafts.
@@ -187,7 +186,7 @@ function labelValuesCallback(plugin, replyApi, change) {
         if (refreshedChangeObj.unresolved_comment_count !== 0) {
           replyApi.showMessage(unresolvedMsg);
         } else {
-          const drafts = await getChangeDrafts(plugin);
+          const drafts = await getChangeDrafts(plugin, change);
           if (Object.keys(drafts).length === 0) {
             replyApi.setLabelValue(CQ_LABEL, '+' + CQ_LABEL_MAX_VALUE);
             replyApi.showMessage(getSendToCQReplyDialogMsg());
@@ -283,7 +282,7 @@ async function replaceQuickApproveButton(plugin, change) {
         'Code-Review+' + REVIEW_LABEL_MAX_VALUE);
     changeActions.setEnabled(key, true);
     changeActions.addTapListener(
-        key, quickApproveHandler(plugin, changeActions, key));
+        key, quickApproveHandler(plugin, change, changeActions, key));
     changeActions.setActionPriority(
         changeActions.ActionType.CHANGE, key, -3);
     CUSTOM_QUICK_APPROVE_KEY = key;
@@ -295,9 +294,9 @@ async function replaceQuickApproveButton(plugin, change) {
   }
 }
 
-function quickApproveHandler(plugin, changeActions, key) {
+function quickApproveHandler(plugin, change, changeActions, key) {
   return async function() {
-    const refreshedChangeObj = await getChangeObj(plugin);
+    const refreshedChangeObj = await getChangeObj(plugin, change);
     // Disable the auto approve button.
     changeActions.setEnabled(key, false);
     if (!getChangeLabel(refreshedChangeObj, AUTOSUBMIT_LABEL).approved ||
@@ -305,24 +304,31 @@ function quickApproveHandler(plugin, changeActions, key) {
       // Do not automatically set CQ+2 if AS+1 is not set or if CQ+2
       // is already set.
       try {
-        await setApprovalLabels(plugin, false);
+        await setApprovalLabels(plugin, change, false);
       } catch (err) {
         console.log(err);
         // Re-enable the quick approve button if there was an error.
         changeActions.setEnabled(key, true);
       }
     } else {
-      if (AUTOSUBMIT_POPUP) {
-        // Make sure the popup is completely closed before we open it.
-        AUTOSUBMIT_POPUP.close();
-        AUTOSUBMIT_POPUP.open();
-      } else {
-        AUTOSUBMIT_POPUP = await plugin.popup(AutosubmitPopup.is);
-      }
+      await openAutosubmitPopup(plugin, change);
       // Re-enable the key in case the user clicks outside the popup.
       changeActions.setEnabled(key, true);
     }
   };
+}
+
+async function openAutosubmitPopup(plugin, change) {
+  if (AUTOSUBMIT_POPUP) {
+    // Make sure the popup is completely closed before we open it.
+    AUTOSUBMIT_POPUP.close();
+    AUTOSUBMIT_POPUP.open();
+  } else {
+    AUTOSUBMIT_POPUP = await plugin.popup(AutosubmitPopup.is);
+    const el = AUTOSUBMIT_POPUP._getElement().querySelector(AutosubmitPopup.is);
+    el.change = change;
+    el.init();
+  }
 }
 
 class AutosubmitPopup extends Polymer.Element {
@@ -340,8 +346,7 @@ class AutosubmitPopup extends Polymer.Element {
     };
   }
 
-  ready() {
-    super.ready();
+  init() {
     this._setUnresolvedCommentsOrDrafts();
   }
 
@@ -357,7 +362,7 @@ class AutosubmitPopup extends Polymer.Element {
 
   async _setApprovalLabels(sendToCQ) {
     try {
-      await setApprovalLabels(this.plugin, sendToCQ);
+      await setApprovalLabels(this.plugin, this.change, sendToCQ);
     } catch (err) {
       // Re-enable the quick approve button if there was an error.
       console.error(err);
@@ -370,12 +375,12 @@ class AutosubmitPopup extends Polymer.Element {
   }
 
   async _setUnresolvedCommentsOrDrafts() {
-    const change = await getChangeObj(this.plugin);
+    const change = await getChangeObj(this.plugin, this.change);
     if (change.unresolved_comment_count !== 0) {
       this.unresolvedCommentsOrDrafts = true;
       return;
     }
-    const drafts = await getChangeDrafts(this.plugin);
+    const drafts = await getChangeDrafts(this.plugin, this.change);
     this.unresolvedCommentsOrDrafts = Object.keys(drafts).length !== 0;
   }
 }

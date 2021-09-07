@@ -67,20 +67,16 @@ export function getChangeLabel(change, labelName) {
 /**
  * Calls the server to get an updated change obj and returns its promise.
  */
-export function getChangeObj(plugin) {
-  const changeNum = plugin.changeActions().ensureEl().changeNum;
-  const url = '/changes/' + changeNum + '/detail';
-  return plugin.restApi().get(url);
+export function getChangeObj(plugin, change) {
+  return plugin.restApi().get(`/changes/${change._number}/detail`);
 }
 
 /**
  * Calls the server to get list of of all draft comments that below to the
  * calling user.
  */
-export function getChangeDrafts(plugin) {
-  const changeNum = plugin.changeActions().ensureEl().changeNum;
-  const url = '/changes/' + changeNum + '/drafts';
-  return plugin.restApi().get(url);
+export function getChangeDrafts(plugin, change) {
+  return plugin.restApi().get(`/changes/${change._number}/drafts`);
 }
 
 /**
