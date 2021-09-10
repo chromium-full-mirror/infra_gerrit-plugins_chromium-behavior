@@ -22,7 +22,8 @@ found in the LICENSE file.
         } from '../src/main/resources/static/common.js';
       import {
           installSelfReviewWarner,
-          alertOnSelfApproval,
+          installOnSelfApproval,
+          installWarner,
         } from '../src/main/resources/static/self-review-warner.js';
 
       suite('self-review-warner test', () => {
@@ -36,7 +37,7 @@ found in the LICENSE file.
           sandbox.restore();
         });
 
-        test('warner does not alert on merged changes', () => {
+        test('warner does not install on merged changes', () => {
           const plugin = {
             changeReply: sandbox.stub().returns({
               addLabelValuesChangedCallback: () => ({}),
@@ -60,14 +61,52 @@ found in the LICENSE file.
           sinon.assert.calledOnce(plugin.changeReply);
         });
 
-        test('alertOnSelfApproval without votes', () => {
-          const stub = sandbox.stub(window, 'alert');
+        test('installOnSelfApproval without votes', () => {
+          const stub = sandbox.stub();
+          const plugin = {
+            hook: () => ({
+              onAttached: stub,
+            }),
+          };
           const change = {
             owner: {email: 'foo@bar.com'},
             labels: {[REVIEW_LABEL]: {}},
           };
-          alertOnSelfApproval(change);
+          installOnSelfApproval(plugin, change);
           sinon.assert.notCalled(stub);
+        });
+
+        test('installOnSelfApproval with a service account', () => {
+          const stub = sandbox.stub();
+          const plugin = {
+            hook: () => ({
+              onAttached: stub,
+            }),
+          };
+          let change = {
+            owner: {email: 'foo@bar.com'},
+            labels: {[REVIEW_LABEL]: {
+              all: [{
+                email: 'foo@bar.com',
+                value: 0,
+                tags: ['SERVICE_USER'],
+              }],
+            }},
+          };
+          installOnSelfApproval(plugin, change);
+          sinon.assert.notCalled(stub);
+
+          change = {
+            owner: {email: 'foo@bar.com'},
+            labels: {[REVIEW_LABEL]: {
+              all: [{
+                email: 'foo@bar.com',
+                value: 0,
+              }],
+            }},
+          };
+          installOnSelfApproval(plugin, change);
+          sinon.assert.calledOnce(stub);
         });
       });
     </script>
