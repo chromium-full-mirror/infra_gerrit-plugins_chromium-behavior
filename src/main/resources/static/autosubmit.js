@@ -164,6 +164,12 @@ async function setApprovalLabels(plugin, change, sendToCQ) {
 function labelValuesCallback(plugin, replyApi, change) {
   let ownerDeselectedAutoSubmit = false;
   return async function({name, value}) {
+    // TODO(https://crbug.com/gerrit/15149): Check if change we have in
+    // parameter is the same as open one.
+    const expectedPath = `${change.project}/+/${change._number}`;
+    if (!window.location.pathname.includes(expectedPath)) {
+      return;
+    }
     const reviewApproved = replyApi.getLabelValue(REVIEW_LABEL) ===
                                '+' + REVIEW_LABEL_MAX_VALUE;
     const autoSubmitApproved = isAutoSubmitApproved(change, replyApi);
