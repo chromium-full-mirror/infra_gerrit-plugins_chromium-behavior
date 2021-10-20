@@ -64,7 +64,7 @@ export function installAutoSubmit(plugin, change) {
   // automatically added.
   const replyApi = plugin.changeReply();
   replyApi.addLabelValuesChangedCallback(
-      labelValuesCallback(plugin, replyApi, plugin.restApi(), change));
+      labelValuesCallback(plugin, replyApi, change));
 
   // Replace the CR+1 button with a custom handler on the main page.
   replaceQuickApproveButton(plugin, change);
@@ -161,7 +161,7 @@ async function setApprovalLabels(plugin, change, sendToCQ) {
  *       Set CQ+2
  *       Inform user that CQ+2 was automatically set
  */
-function labelValuesCallback(plugin, replyApi, restApi, change) {
+function labelValuesCallback(plugin, replyApi, change) {
   let ownerDeselectedAutoSubmit = false;
   return async function({name, value}) {
     const reviewApproved = replyApi.getLabelValue(REVIEW_LABEL) ===
@@ -202,14 +202,6 @@ function labelValuesCallback(plugin, replyApi, restApi, change) {
         // If AS+1 and CR+1 then set CQ+2.
         replyApi.setLabelValue(CQ_LABEL, '+' + CQ_LABEL_MAX_VALUE);
         replyApi.showMessage(getSendToCQReplyDialogMsg());
-      }
-    } else if (name == CQ_LABEL) {
-      // If CQ + max value then remove the owner from the attention set,
-      // as the cl will attempt to be submitted and the buildbot will
-      // readd the attention set if it fails.
-      if (replyApi.getLabelValue(CQ_LABEL) === '+' + CQ_LABEL_MAX_VALUE) {
-        attention_url = `/changes/${change._number}/attention/${change.owner._account_id}`;
-        restApi.delete(attention_url);
       }
     }
   };
