@@ -8,13 +8,16 @@ import {approveAndSubmitRevert, installASCheckbox,
 import {cqApproveAndSubmitRevert, installCQCheckbox,
   cqInterceptRevertMessage} from './cq-revert-munger.js';
 import {hideMoveChange} from './hide-move-change.js';
-import {installAutoSubmit} from './autosubmit.js';
+import {installAutoSubmit,
+  installLabelValuesCallbackAutosubmit} from './autosubmit.js';
 import {installLgtmWatcher} from './lgtm-catcher.js';
 import {maybeInstallReland} from './reland-button.js';
 import {warnAboutTbr} from './tbr-warner.js';
-import {installSelfReviewWarner} from './self-review-warner.js';
+import {installSelfReviewWarner,
+  installLabelValuesCallbackReviewWarner} from './self-review-warner.js';
 
 Gerrit.install((plugin) => {
+  const replyApi = plugin.changeReply();
   const chopsBanner = new ChopsBanner(window.location.host);
   plugin.hook('banner').onAttached((el) => {
     chopsBanner.register(el);
@@ -38,11 +41,15 @@ Gerrit.install((plugin) => {
   });
 
   plugin.on('showchange', (change) => {
-    installLgtmWatcher(plugin.changeReply());
+    installLgtmWatcher(replyApi);
     installAutoSubmit(plugin, change);
     installSelfReviewWarner(plugin, change);
     maybeInstallReland(plugin, change);
     hideMoveChange(plugin, change);
   });
   plugin.on('commitmsgedit', warnAboutTbr);
+
+  // Watch for any label value changes
+  installLabelValuesCallbackAutosubmit(plugin);
+  installLabelValuesCallbackReviewWarner(plugin);
 });

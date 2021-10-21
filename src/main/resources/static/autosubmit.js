@@ -60,12 +60,6 @@ export function installAutoSubmit(plugin, change) {
   // approve.
   checkIfApprovedByAllOtherReviewers(plugin, change);
 
-  // Watch for any label value changes to see if CQ+2 should be
-  // automatically added.
-  const replyApi = plugin.changeReply();
-  replyApi.addLabelValuesChangedCallback(
-      labelValuesCallback(plugin, replyApi, change));
-
   // Replace the CR+1 button with a custom handler on the main page.
   replaceQuickApproveButton(plugin, change);
 }
@@ -148,22 +142,20 @@ async function setApprovalLabels(plugin, change, sendToCQ) {
  *
  * Algorithm used by the callback:
  *
- *   ownerDeselectedAutoSubmit = false
- *
  *   If label name == Code-Review:
  *     Re-evaluate the quick approve button
- *     If CR+1 and AS+1 and not ownerDeselectedAutoSubmit:
+ *     If CR+1 and AS+1:
  *       Set CQ+2
  *       Inform user that CQ+2 was automatically set
  *   If label name == Auto-Submit:
- *     Set ownerDeselectedAutoSubmit value
- *     If CR+1 and not ownerDeselectedAutoSubmit:
+ *     Set ownerSelectedAutoSubmit value
+ *     If CR+1 and ownerSelectedAutoSubmit:
  *       Set CQ+2
  *       Inform user that CQ+2 was automatically set
  */
-function labelValuesCallback(plugin, replyApi, change) {
-  let ownerDeselectedAutoSubmit = false;
-  return async function({name, value}) {
+export function installLabelValuesCallbackAutosubmit(plugin) {
+  const replyApi = plugin.changeReply();
+  replyApi.addLabelValuesChangedCallback(async ({name, value}, change) => {
     // TODO(https://crbug.com/gerrit/15149): Check if change we have in
     // parameter is the same as open one.
     const expectedPath = `${change.project}/+/${change._number}`;
@@ -184,8 +176,7 @@ function labelValuesCallback(plugin, replyApi, change) {
       replaceQuickApproveButton(plugin, refreshedChangeObj);
       // If CR+1 and AS+1 then set CQ+2 if there are no unresolved
       // comments and/or drafts.
-      if (value === '+' + REVIEW_LABEL_MAX_VALUE && autoSubmitApproved &&
-          !ownerDeselectedAutoSubmit) {
+      if (value === '+' + REVIEW_LABEL_MAX_VALUE && autoSubmitApproved) {
         const unresolvedMsg = 'This change has unresolved comments ' +
                                'and/or drafts. Not triggering ' +
                                'AutoSubmit.';
@@ -203,14 +194,14 @@ function labelValuesCallback(plugin, replyApi, change) {
       }
     } else if (name === AUTOSUBMIT_LABEL) {
       // The change owner has changed the vote of the Auto-Submit label.
-      ownerDeselectedAutoSubmit = (value !== '+' + AS_LABEL_MAX_VALUE);
-      if (!ownerDeselectedAutoSubmit && reviewApproved) {
+      const ownerSelectedAutoSubmit = (value === '+' + AS_LABEL_MAX_VALUE);
+      if (ownerSelectedAutoSubmit && reviewApproved) {
         // If AS+1 and CR+1 then set CQ+2.
         replyApi.setLabelValue(CQ_LABEL, '+' + CQ_LABEL_MAX_VALUE);
         replyApi.showMessage(getSendToCQReplyDialogMsg());
       }
     }
-  };
+  });
 }
 
 /**

@@ -30,10 +30,12 @@ export function installSelfReviewWarner(plugin, change) {
 
   // Display a warning if the change is already self-approved.
   installOnSelfApproval(plugin, change);
+}
 
+export function installLabelValuesCallbackReviewWarner(plugin) {
   // After each label update, check again if the change has been self-approved.
   const replyApi = plugin.changeReply();
-  replyApi.addLabelValuesChangedCallback(({name, value}) => {
+  replyApi.addLabelValuesChangedCallback(({name, value}, change) => {
     // Only check again if the Code-Review label was just approved.
     const maxValue = '+' + getLabelMaxValue(change, REVIEW_LABEL);
     if (name !== REVIEW_LABEL || value !== maxValue) {

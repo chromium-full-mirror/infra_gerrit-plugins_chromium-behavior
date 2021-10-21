@@ -37,30 +37,6 @@ found in the LICENSE file.
           sandbox.restore();
         });
 
-        test('warner does not install on merged changes', () => {
-          const plugin = {
-            changeReply: sandbox.stub().returns({
-              addLabelValuesChangedCallback: () => ({}),
-            }),
-          };
-          const change = {
-            owner: {email: 'foo@bar.com'},
-            labels: {[REVIEW_LABEL]: {all: []}},
-          };
-
-          installSelfReviewWarner(plugin, {
-            status: STATUS_SUBMITTED,
-            ...change,
-          });
-          sinon.assert.notCalled(plugin.changeReply);
-
-          installSelfReviewWarner(plugin, {
-            status: 'NEW',
-            ...change,
-          });
-          sinon.assert.calledOnce(plugin.changeReply);
-        });
-
         test('installOnSelfApproval without votes', () => {
           const stub = sandbox.stub();
           const plugin = {
