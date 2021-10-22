@@ -23,7 +23,13 @@ Gerrit.install((plugin) => {
     chopsBanner.register(el);
   });
 
-  const rubberStamperHosts = ['chromium', 'chrome-internal', 'skia'];
+  const rubberStamperHosts = [
+          'chromium',
+          'chrome-internal',
+          'fuchsia',
+          'skia',
+          'turquoise-internal'
+  ];
   plugin.getServerInfo().then((config) => {
     let onConfirmRevert, onRevert, onPostRevert;
     if (rubberStamperHosts.includes(config.gerrit.instance_id)) {
