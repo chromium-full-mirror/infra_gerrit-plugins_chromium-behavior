@@ -5,8 +5,6 @@
 import {REVIEW_LABEL, STATUS_SUBMITTED, getLabelMaxValue, getTrailer,
   isLabelVotePermitted} from './common.js';
 
-import {relandPopupTemplate} from './reland-popup-html.js';
-
 let _CUSTOM_RELAND_KEY = null;
 let _NEW_KEY = null;
 let _CURR_CHANGE = null;
@@ -124,7 +122,18 @@ async function createReland(plugin, notify) {
 
 class RelandPopup extends Polymer.Element {
   static get template() {
-    return relandPopupTemplate;
+    return Polymer.html`
+      <gr-dialog
+          id="relandDialog"
+          confirm-label="Notify Reviewers"
+          cancel-label="Reland Without Notifying"
+          on-cancel="_handleCancel"
+          on-confirm="_handleConfirm">
+        <div class="main" slot="main">
+          Click "Notify Reviewers" if you would like to send this<br/>
+          reland to reviewers, or "Reland Without Notifying" if not.<br/>
+        </div>
+      </gr-dialog>`;
   }
 
   static get is() {

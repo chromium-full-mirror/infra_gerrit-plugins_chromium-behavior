@@ -6,8 +6,6 @@ import {CQ_LABEL, REVIEW_LABEL, STATUS_SUBMITTED, getChangeDrafts,
   getChangeLabel, getChangeObj, getLabelMaxValue,
   isLabelVotePermitted} from './common.js';
 
-import {autosubmitPopupTemplate} from './autosubmit-popup-html.js';
-
 const AS_LABEL_MAX_VALUE = 1;
 const AUTOSUBMIT_LABEL = 'Auto-Submit';
 
@@ -330,7 +328,29 @@ async function openAutosubmitPopup(plugin, change) {
 
 class AutosubmitPopup extends Polymer.Element {
   static get template() {
-    return autosubmitPopupTemplate;
+    return Polymer.html`
+      <gr-dialog
+          id="autosubmitDialog"
+          confirm-label="Trigger Autosubmit"
+          cancel-label="Approve without Autosubmit"
+          on-cancel="_handleCancel"
+          on-confirm="_handleConfirm">
+        <div class="header" slot="header">
+          This change's owner has enabled Auto-Submit
+        </div>
+        <div class="main" slot="main">
+          Click "Trigger Autosubmit" if you would like to send this<br/>
+          change to the CQ, or "Approve without Autosubmit" if not.<br/>
+          <template is="dom-if" if="[[!_isApprovedByAllOtherReviewers()]]">
+            <br/>
+            <b>Note:</b> Not all reviewers have approved this change!
+          </template>
+          <template is="dom-if" if="[[unresolvedCommentsOrDrafts]]">
+            <br/>
+            <b>Note:</b> This change has unresolved comments and/or drafts!
+          </template>
+        </div>
+      </gr-dialog>`;
   }
 
   static get is() {
