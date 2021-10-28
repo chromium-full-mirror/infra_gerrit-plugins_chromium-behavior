@@ -1,10 +1,26 @@
-// Copyright 2021 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+/**
+ * @license
+ * Copyright 2021 The Chromium Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+import {PluginApi} from '@gerritcodereview/typescript-api/plugin';
 
 import {
-  STATUS_SUBMITTED, REVIEW_LABEL, getLabelMaxValue, getChangeLabel,
-  getChangeObj} from './common.js';
+  ChangeInfo,
+  ApprovalInfo,
+} from '@gerritcodereview/typescript-api/rest-api';
+
+import {LabelsChangedDetail} from '@gerritcodereview/typescript-api/change-reply';
+
+import {
+  REVIEW_LABEL,
+  STATUS_SUBMITTED,
+  getApprovalsForLabel,
+  getChangeObj,
+  getLabelMaxValue,
+} from './common';
 
 const SELF_APPROVAL_MESSAGE =
   'WARNING: The owner of this change has voted on the Code-Review label. ' +
@@ -22,7 +38,7 @@ const WARNER_STYLES = `
   font-weight: bold;
 }`;
 
-export function installSelfReviewWarner(plugin, change) {
+export function installSelfReviewWarner(plugin: PluginApi, change: ChangeInfo) {
   // Don't warn on submitted changes.
   if (change.status === STATUS_SUBMITTED) {
     return;
@@ -32,32 +48,37 @@ export function installSelfReviewWarner(plugin, change) {
   installOnSelfApproval(plugin, change);
 }
 
-export function installLabelValuesCallbackReviewWarner(plugin) {
+export function installLabelValuesCallbackReviewWarner(plugin: PluginApi) {
   // After each label update, check again if the change has been self-approved.
   const replyApi = plugin.changeReply();
-  replyApi.addLabelValuesChangedCallback(({name, value}, change) => {
-    // Only check again if the Code-Review label was just approved.
-    const maxValue = '+' + getLabelMaxValue(change, REVIEW_LABEL);
-    if (name !== REVIEW_LABEL || value !== maxValue) {
-      return;
+  replyApi.addLabelValuesChangedCallback(
+    async (labelDetail: LabelsChangedDetail, change?: ChangeInfo) => {
+      if (!change) {
+        return;
+      }
+      // Only check again if the Code-Review label was just approved.
+      const maxValue = `+${getLabelMaxValue(change, REVIEW_LABEL)}`;
+      if (labelDetail.name !== REVIEW_LABEL || labelDetail.value !== maxValue) {
+        return;
+      }
+      getChangeObj(plugin, change).then(refreshedChange => {
+        installOnSelfApproval(plugin, refreshedChange);
+      });
     }
-    getChangeObj(plugin, change).then((refreshedChange) => {
-      installOnSelfApproval(plugin, refreshedChange);
-    });
-  });
+  );
 }
 
 /**
  * Displays an alert if the change is approved by its owner.
- * @param {object} change gr-change-view
  */
-export function installOnSelfApproval(plugin, change) {
+export function installOnSelfApproval(plugin: PluginApi, change: ChangeInfo) {
   const maxValue = getLabelMaxValue(change, REVIEW_LABEL);
-  const isSelfApproved = getChangeLabel(change, REVIEW_LABEL)?.all?.some(
-    (vote) => vote.email === change.owner.email &&
-        vote.value === maxValue &&
-        !vote.tags?.includes('SERVICE_USER')
-    );
+  const isSelfApproved = getApprovalsForLabel(change, REVIEW_LABEL).some(
+    (vote: ApprovalInfo) =>
+      vote.email === change.owner.email &&
+      vote.value === maxValue &&
+      !vote.tags?.includes('SERVICE_USER')
+  );
   if (isSelfApproved) {
     plugin.hook('change-metadata-item').onAttached(installWarner);
   }
@@ -65,9 +86,10 @@ export function installOnSelfApproval(plugin, change) {
 
 /**
  * Installs a warning under the change's metadata.
- * @param {object} element change-metadata-item
+ *
+ * @param element change-metadata-item
  */
- export function installWarner(element) {
+export function installWarner(element: HTMLElement) {
   // Remove any previous installations.
   while (element.firstChild) {
     element.removeChild(element.firstChild);

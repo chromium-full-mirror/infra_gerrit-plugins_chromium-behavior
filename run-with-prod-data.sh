@@ -12,7 +12,7 @@ set -eu
 readonly SCRIPT_DIR=$(realpath "$(dirname "${0}")")
 readonly GERRIT_DIR=$(realpath "${GERRIT_DIR:-${SCRIPT_DIR}/../..}")
 readonly PLUGINS_PATH=$(realpath --relative-to="$GERRIT_DIR" "$SCRIPT_DIR/..")
-readonly GERRIT_HOST="${GERRIT_HOST:-webrtc-review.googlesource.com}"
+readonly GERRIT_HOST="${GERRIT_HOST:-chromium-review.googlesource.com}"
 
 (set -x &&
     cd "${GERRIT_DIR}" &&

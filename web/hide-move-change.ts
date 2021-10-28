@@ -1,14 +1,21 @@
 /**
- * @fileoverview Description of this file.
+ * @license
+ * Copyright 2021 The Chromium Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
  */
+
+import {PluginApi} from '@gerritcodereview/typescript-api/plugin';
+
+import {
+  ActionType,
+  ChangeActions,
+} from '@gerritcodereview/typescript-api/change-actions';
 
 /**
  * Removes Move change from UI, regardless of Gerrit configuration.
- * @param {Plugin} plugin: the plugin object
- * @param {ChangeInfo} change: the object for the current change
  */
-export async function hideMoveChange(plugin, change) {
+export async function hideMoveChange(plugin: PluginApi) {
   const changeActions = plugin.changeActions();
-  changeActions.setActionHidden(
-      changeActions.ActionType.CHANGE, changeActions.ChangeActions.MOVE, true);
+  changeActions.setActionHidden(ActionType.CHANGE, ChangeActions.MOVE, true);
 }

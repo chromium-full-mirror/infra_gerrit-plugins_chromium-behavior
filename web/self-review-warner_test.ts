@@ -1,90 +1,77 @@
-<!doctype html>
-<!--
-Copyright 2021 The Chromium Authors. All rights reserved.
-Use of this source code is governed by a BSD-style license that can be
-found in the LICENSE file.
--->
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+/**
+ * @license
+ * Copyright 2021 The Chromium Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
-    <title>self-review-warner test</title>
+import './test/test-setup';
 
-    <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
-    <script src="../node_modules/web-component-tester/browser.js"></script>
-  </head>
-  <body>
-    <script type="module">
-      import {
-          STATUS_SUBMITTED,
-          REVIEW_LABEL,
-        } from '../src/main/resources/static/common.js';
-      import {
-          installSelfReviewWarner,
-          installOnSelfApproval,
-          installWarner,
-        } from '../src/main/resources/static/self-review-warner.js';
+import {REVIEW_LABEL} from './common';
 
-      suite('self-review-warner test', () => {
-        let sandbox;
+import {installOnSelfApproval} from './self-review-warner';
 
-        setup(() => {
-          sandbox = sinon.sandbox.create();
-        });
+suite('self-review-warner test', () => {
+  test('installOnSelfApproval without votes', () => {
+    const stub = sinon.stub();
+    const plugin = {
+      hook: () => {
+        return {
+          onAttached: stub,
+        };
+      },
+    };
+    const change = {
+      owner: {email: 'foo@bar.com'},
+      labels: {[REVIEW_LABEL]: {}},
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    installOnSelfApproval(plugin as any, change as any);
+  });
 
-        teardown(() => {
-          sandbox.restore();
-        });
+  test('installOnSelfApproval with a service account', () => {
+    const stub = sinon.stub();
+    const plugin = {
+      hook: () => {
+        return {
+          onAttached: stub,
+        };
+      },
+    };
+    let change = {
+      owner: {email: 'foo@bar.com'},
+      labels: {
+        [REVIEW_LABEL]: {
+          all: [
+            {
+              email: 'foo@bar.com',
+              value: 0,
+              tags: ['SERVICE_USER'],
+            },
+          ],
+        },
+      },
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    installOnSelfApproval(plugin as any, change as any);
+    sinon.assert.notCalled(stub);
 
-        test('installOnSelfApproval without votes', () => {
-          const stub = sandbox.stub();
-          const plugin = {
-            hook: () => ({
-              onAttached: stub,
-            }),
-          };
-          const change = {
-            owner: {email: 'foo@bar.com'},
-            labels: {[REVIEW_LABEL]: {}},
-          };
-          installOnSelfApproval(plugin, change);
-          sinon.assert.notCalled(stub);
-        });
-
-        test('installOnSelfApproval with a service account', () => {
-          const stub = sandbox.stub();
-          const plugin = {
-            hook: () => ({
-              onAttached: stub,
-            }),
-          };
-          let change = {
-            owner: {email: 'foo@bar.com'},
-            labels: {[REVIEW_LABEL]: {
-              all: [{
-                email: 'foo@bar.com',
-                value: 0,
-                tags: ['SERVICE_USER'],
-              }],
-            }},
-          };
-          installOnSelfApproval(plugin, change);
-          sinon.assert.notCalled(stub);
-
-          change = {
-            owner: {email: 'foo@bar.com'},
-            labels: {[REVIEW_LABEL]: {
-              all: [{
-                email: 'foo@bar.com',
-                value: 0,
-              }],
-            }},
-          };
-          installOnSelfApproval(plugin, change);
-          sinon.assert.calledOnce(stub);
-        });
-      });
-    </script>
-  </body>
-</html>
+    change = {
+      owner: {email: 'foo@bar.com'},
+      labels: {
+        [REVIEW_LABEL]: {
+          all: [
+            {
+              email: 'foo@bar.com',
+              value: 0,
+              tags: [],
+            },
+          ],
+        },
+      },
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    installOnSelfApproval(plugin as any, change as any);
+    sinon.assert.calledOnce(stub);
+  });
+});

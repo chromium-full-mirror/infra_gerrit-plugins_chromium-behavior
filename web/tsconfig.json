@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig-plugins-base.json",
+  "compilerOptions": {
+    "outDir": "../../../.ts-out/plugins/chromium-behavior/web",
+    "target": "es2020"
+  },
+  "include": [
+    "**/*"
+  ]
+}

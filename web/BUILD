@@ -1,18 +1,62 @@
-load("//tools/bzl:js.bzl", "polygerrit_plugin")
-load("@npm//@bazel/rollup:index.bzl", "rollup_bundle")
+load("//tools/js:eslint.bzl", "plugin_eslint")
+load("//tools/bzl:js.bzl", "gerrit_js_bundle", "karma_test")
+load("@npm//@bazel/typescript:index.bzl", "ts_config", "ts_project")
 
-rollup_bundle(
-    name = "chromium-behavior-bundle",
-    srcs = glob(["src/main/resources/static/*.js"]),
-    entry_point = "src/main/resources/static/chromium-behavior.js",
-    rollup_bin = "//tools/node_tools:rollup-bin",
-    sourcemap = "hidden",
+package_group(
+    name = "visibility",
+    packages = ["//plugins/chromium-behavior/..."],
+)
+
+package(default_visibility = [":visibility"])
+
+ts_config(
+    name = "tsconfig",
+    src = "tsconfig.json",
     deps = [
-        "@tools_npm//rollup-plugin-node-resolve",
+        "//plugins:tsconfig-plugins-base.json",
     ],
 )
 
-polygerrit_plugin(
-    name = "chromium-behavior",
-    app = "chromium-behavior-bundle.js",
+ts_project(
+    name = "chromium-behavior-ts",
+    srcs = glob(
+        ["**/*.ts"],
+        exclude = ["**/*test*"],
+    ),
+    incremental = True,
+    out_dir = "_bazel_ts_out",
+    tsc = "//tools/node_tools:tsc-bin",
+    tsconfig = ":tsconfig",
+    deps = [
+        "@plugins_npm//@gerritcodereview/typescript-api",
+        "@plugins_npm//lit",
+    ],
 )
+
+ts_project(
+    name = "chromium-behavior-ts-tests",
+    srcs = glob(["**/*.ts"]),
+    incremental = True,
+    out_dir = "_bazel_ts_out_tests",
+    tsc = "//tools/node_tools:tsc-bin",
+    tsconfig = ":tsconfig",
+    deps = [
+        "@plugins_npm//:node_modules",
+        "@ui_dev_npm//:node_modules"
+    ],
+)
+
+gerrit_js_bundle(
+    name = "chromium-behavior",
+    srcs = [":chromium-behavior-ts"],
+    entry_point = "_bazel_ts_out/plugin.js",
+)
+
+karma_test(
+    name = "karma_test",
+    srcs = ["karma_test.sh"],
+    data = [":chromium-behavior-ts-tests"],
+)
+
+plugin_eslint()
+
