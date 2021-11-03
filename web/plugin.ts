@@ -7,8 +7,7 @@
 
 import '@gerritcodereview/typescript-api/gerrit';
 
-import {EventType} from '@gerritcodereview/typescript-api/plugin';
-
+import {EventType, PluginApi} from '@gerritcodereview/typescript-api/plugin';
 import {ChangeInfo} from '@gerritcodereview/typescript-api/rest-api';
 
 import {ChopsBanner} from './chops-banner';
@@ -35,7 +34,7 @@ import {
   installLabelValuesCallbackReviewWarner,
 } from './self-review-warner';
 
-window.Gerrit.install(plugin => {
+window.Gerrit.install((plugin: PluginApi) => {
   const replyApi = plugin.changeReply();
   plugin.hook('banner').onAttached((el: HTMLElement) => {
     try {
@@ -68,12 +67,12 @@ window.Gerrit.install(plugin => {
   plugin.on(EventType.REVERT, onRevert);
   plugin.on(EventType.POST_REVERT, onPostRevert);
 
-  plugin.on(EventType.SHOW_CHANGE, (change: ChangeInfo) => {
+  plugin.on(EventType.SHOW_CHANGE, async (change: ChangeInfo) => {
     installLgtmWatcher(replyApi);
-    installAutoSubmit(plugin, change);
+    await installAutoSubmit(plugin, change);
     installSelfReviewWarner(plugin, change);
-    maybeInstallReland(plugin, change);
-    hideMoveChange(plugin);
+    await maybeInstallReland(plugin, change);
+    await hideMoveChange(plugin);
   });
   plugin.on(EventType.COMMIT_MSG_EDIT, warnAboutTbr);
 

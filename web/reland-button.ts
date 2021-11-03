@@ -105,7 +105,7 @@ function installRelandButton(
     if (_RELAND_POPUP) {
       // Make sure the popup is completely closed before we open it.
       _RELAND_POPUP.close();
-      _RELAND_POPUP.open();
+      await _RELAND_POPUP.open();
     } else {
       _RELAND_POPUP = await plugin.popup(RelandPopup.is);
     }
@@ -144,10 +144,8 @@ async function createReland(plugin: PluginApi, notify: string) {
   }
   const subject = 'Reland "' + _CURR_CHANGE.subject + '"\n\n';
   const disclaimer =
-    'This is a reland of ' +
-    _CURR_CHANGE.current_revision +
-    '\n\n' +
-    "Original change's description:\n";
+    `This is a reland of ${_CURR_CHANGE.current_revision}` +
+    "\n\nOriginal change's description:\n";
   const quote = orig.replace(/^/gm, '> ').replace(/^> $/gm, '>');
   let message = subject + disclaimer + quote;
   const bugFooter = getTrailer(orig, 'Bug');

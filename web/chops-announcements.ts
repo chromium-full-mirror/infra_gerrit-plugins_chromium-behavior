@@ -48,7 +48,9 @@ export class ChopsDashClient {
         `Response body does not start with XSSI prefix: ${xssiPrefix}`
       );
     }
-    return JSON.parse(rawResponseText.substr(xssiPrefix.length));
+    return JSON.parse(
+      rawResponseText.substr(xssiPrefix.length)
+    ) as SearchAnnouncementResponse;
   }
 
   async getLiveAnnouncements(

@@ -61,9 +61,8 @@ export function installLabelValuesCallbackReviewWarner(plugin: PluginApi) {
       if (labelDetail.name !== REVIEW_LABEL || labelDetail.value !== maxValue) {
         return;
       }
-      getChangeObj(plugin, change).then(refreshedChange => {
-        installOnSelfApproval(plugin, refreshedChange);
-      });
+      const refreshedChange = await getChangeObj(plugin, change);
+      installOnSelfApproval(plugin, refreshedChange);
     }
   );
 }

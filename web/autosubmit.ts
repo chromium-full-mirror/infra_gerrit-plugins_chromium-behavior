@@ -58,7 +58,7 @@ let CHANGE: ChangeInfo | null = null;
  *
  * This function adds both behaviors. See crbug.com/631551 for more context.
  */
-export function installAutoSubmit(plugin: PluginApi, change: ChangeInfo) {
+export async function installAutoSubmit(plugin: PluginApi, change: ChangeInfo) {
   if (!change || !change.permitted_labels) {
     // Could happen if the user is not logged in.
     return;
@@ -95,10 +95,10 @@ export function installAutoSubmit(plugin: PluginApi, change: ChangeInfo) {
 
   // Check to see if we are still waiting for any other reviewers to
   // approve.
-  checkIfApprovedByAllOtherReviewers(plugin, change);
+  await checkIfApprovedByAllOtherReviewers(plugin, change);
 
   // Replace the CR+1 button with a custom handler on the main page.
-  replaceQuickApproveButton(plugin, change);
+  await replaceQuickApproveButton(plugin, change);
 }
 
 /**
@@ -231,7 +231,7 @@ export function installLabelValuesCallbackAutosubmit(plugin: PluginApi) {
         // are making the right decisions when displaying the quick approve
         // button (see crbug.com/820117).
         const refreshedChangeObj = await getChangeObj(plugin, change);
-        replaceQuickApproveButton(plugin, refreshedChangeObj);
+        await replaceQuickApproveButton(plugin, refreshedChangeObj);
         // If CR+1 and AS+1 then set CQ+2 if there are no unresolved
         // comments and/or drafts.
         if (
@@ -406,7 +406,7 @@ async function openAutosubmitPopup(plugin: PluginApi) {
   if (AUTOSUBMIT_POPUP) {
     // Make sure the popup is completely closed before we open it.
     AUTOSUBMIT_POPUP.close();
-    AUTOSUBMIT_POPUP.open();
+    await AUTOSUBMIT_POPUP.open();
   } else {
     AUTOSUBMIT_POPUP = await plugin.popup('autosubmit-popup');
   }

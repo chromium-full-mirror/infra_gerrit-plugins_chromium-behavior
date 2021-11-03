@@ -14,7 +14,7 @@ const LGTM = 'lgtm';
 export function installLgtmWatcher(replyApi: ChangeReplyPluginApi) {
   let autoAdded = false;
 
-  replyApi.addReplyTextChangedCallback(text => {
+  replyApi.addReplyTextChangedCallback((text: string) => {
     const labelValue = replyApi.getLabelValue(REVIEW_LABEL);
     if (!labelValue) {
       return;

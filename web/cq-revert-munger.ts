@@ -14,7 +14,10 @@ import {
   quoteOriginalMessage,
 } from './common';
 
-import {ChangeInfo} from '@gerritcodereview/typescript-api/rest-api';
+import {
+  ChangeInfo,
+  AccountInfo,
+} from '@gerritcodereview/typescript-api/rest-api';
 
 const CQ_SPAN = document.createElement('span');
 CQ_SPAN.style.margin = '8px';
@@ -83,14 +86,17 @@ export function cqInterceptRevertMessage(
       '# Not skipping CQ checks because this is a ' + 'reland.\n\n';
   } else {
     // Construct new TBR tag.
-    let reviewers = (change.reviewers.REVIEWER || []).map(
-      reviewer => reviewer.email
+    let reviewers: string[] = (change.reviewers.REVIEWER || []).map(
+      (reviewer: AccountInfo) => reviewer.email ?? ''
     );
-    // Do not add Commit bots to TBR. See crbug.com/642739
+    // Do not add Commit bots to TBR, and accounts with no email. See
+    // crbug.com/642739
     reviewers = reviewers.filter(
       email => email && !email.endsWith('commit-bot@chromium.org')
     );
-    reviewers.push(change.owner.email);
+    if (change.owner.email) {
+      reviewers.push(change.owner.email);
+    }
     reviewers = Array.from(new Set(reviewers));
 
     newDescription +=

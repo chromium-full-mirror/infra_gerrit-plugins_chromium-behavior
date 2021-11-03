@@ -38,15 +38,15 @@ function announcementCookieExists(announcementId: string) {
 }
 
 export class ChopsBanner {
-  private chopsAnnouncementsPlatform: string;
+  private readonly chopsAnnouncementsPlatform: string;
+
+  private readonly client: ChopsDashClient;
+
+  private readonly closeBtn: HTMLElement;
+
+  private readonly message: HTMLElement;
 
   private shownAnnouncements: LiveAnnouncement[] = [];
-
-  private message: HTMLElement;
-
-  private closeBtn: HTMLElement;
-
-  private client: ChopsDashClient;
 
   constructor(host: string, element: HTMLElement) {
     switch (host) {
@@ -59,7 +59,7 @@ export class ChopsBanner {
         this.chopsAnnouncementsPlatform = 'chrome-internal-review';
         break;
       default:
-        throw Error('Host not supported.');
+        throw new Error('Host not supported.');
     }
 
     // Set up calls to chopsdash to fetch live announcements
@@ -116,7 +116,9 @@ export class ChopsBanner {
   private closeBanner() {
     this.message.textContent = '';
     // Add a cookie for announcements in the banner so they don't reappear.
-    this.shownAnnouncements.forEach(ann => setClosedBannerCookie(ann.id));
+    for (const ann of this.shownAnnouncements) {
+      setClosedBannerCookie(ann.id);
+    }
     this.shownAnnouncements = [];
     this.closeBtn.style.visibility = 'hidden';
   }
