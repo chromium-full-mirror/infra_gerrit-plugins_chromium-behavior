@@ -45,11 +45,11 @@ window.Gerrit.install((plugin: PluginApi) => {
   });
 
   const rubberStamperHosts = [
-    'chromium',
-    'chrome-internal',
-    'fuchsia',
-    'skia',
-    'turquoise-internal',
+    'chromium-review.googlesource.com',
+    'chrome-internal-review.googlesource.com',
+    'fuchsia-review.googlesource.com',
+    'skia-review.googlesource.com',
+    'turquoise-internal-review.googlesource.com',
   ];
   let onConfirmRevert;
   let onRevert;
