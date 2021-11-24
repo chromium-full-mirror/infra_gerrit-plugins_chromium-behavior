@@ -167,7 +167,7 @@ async function createReland(plugin: PluginApi, notify: string) {
   };
   try {
     const response: ChangeInfo = await plugin.restApi().post(url, body);
-    window.location.pathname = `'/c/${response._number}`;
+    window.location.pathname = `/c/${response._number}`;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     changeActions.setLabel(_NEW_KEY, "Can't reland");
