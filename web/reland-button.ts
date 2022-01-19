@@ -194,12 +194,12 @@ class RelandPopup extends LitElement {
       id="relandDialog"
       confirm-label="Notify Reviewers"
       @confirm=${this.handleConfirm}
-      cancel-label="Reland Without Notifying"
+      cancel-label="Don't Notify Reviewers"
       @cancel=${this.handleCancel}
     >
       <div class="main" slot="main">
         Click "Notify Reviewers" if you would like to send this<br />
-        reland to reviewers, or "Reland Without Notifying" if not.<br />
+        reland to reviewers, or "Don't Notify reviewers" if not.<br />
       </div>
     </gr-dialog>`;
   }
