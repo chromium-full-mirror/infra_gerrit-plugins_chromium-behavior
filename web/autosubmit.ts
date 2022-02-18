@@ -183,7 +183,11 @@ async function setApprovalLabels(
     changeActions
       .ensureEl()
       .dispatchEvent(
-        new CustomEvent('reload', {bubbles: false, composed: true})
+        new CustomEvent('reload', {
+          detail: {clearPatchset: true},
+          bubbles: false,
+          composed: true,
+        })
       );
   } catch (err) {
     changeActions
