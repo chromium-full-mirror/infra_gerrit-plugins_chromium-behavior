@@ -144,7 +144,7 @@ async function createReland(plugin: PluginApi, notify: string) {
   }
   const subject = 'Reland "' + _CURR_CHANGE.subject + '"\n\n';
   const disclaimer =
-    `This is a reland of ${_CURR_CHANGE.current_revision}` +
+    `This is a reland of commit ${_CURR_CHANGE.current_revision}` +
     "\n\nOriginal change's description:\n";
   const quote = orig.replace(/^/gm, '> ').replace(/^> $/gm, '>');
   let message = subject + disclaimer + quote;
