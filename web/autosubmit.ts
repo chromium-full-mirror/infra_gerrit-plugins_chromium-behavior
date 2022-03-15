@@ -48,6 +48,7 @@ let REVIEW_LABEL_MAX_VALUE = 0;
 let CQ_LABEL_MAX_VALUE = 0;
 let APPROVED_BY_ALL_OTHER_REVIEWERS = false;
 let CHANGE: ChangeInfo | null = null;
+let BUTTONS_INSTALLED = false;
 
 /**
  * There are two main flows that need to handle the AS+1 vote:
@@ -59,6 +60,7 @@ let CHANGE: ChangeInfo | null = null;
  * This function adds both behaviors. See crbug.com/631551 for more context.
  */
 export async function installAutoSubmit(plugin: PluginApi, change: ChangeInfo) {
+  BUTTONS_INSTALLED = false;
   if (!change || !change.permitted_labels) {
     // Could happen if the user is not logged in.
     return;
@@ -93,6 +95,7 @@ export async function installAutoSubmit(plugin: PluginApi, change: ChangeInfo) {
     return;
   }
 
+  BUTTONS_INSTALLED = true;
   // Check to see if we are still waiting for any other reviewers to
   // approve.
   await checkIfApprovedByAllOtherReviewers(plugin, change);
@@ -218,6 +221,9 @@ async function setApprovalLabels(
  *       Inform user that CQ+2 was automatically set
  */
 export function installLabelValuesCallbackAutosubmit(plugin: PluginApi) {
+  if (!BUTTONS_INSTALLED) {
+    return;
+  }
   const replyApi = plugin.changeReply();
   replyApi.addLabelValuesChangedCallback(
     async (labelDetail: LabelsChangedDetail, change?: ChangeInfo) => {
