@@ -221,13 +221,13 @@ async function setApprovalLabels(
  *       Inform user that CQ+2 was automatically set
  */
 export function installLabelValuesCallbackAutosubmit(plugin: PluginApi) {
-  if (!BUTTONS_INSTALLED) {
-    return;
-  }
   const replyApi = plugin.changeReply();
   replyApi.addLabelValuesChangedCallback(
     async (labelDetail: LabelsChangedDetail, change?: ChangeInfo) => {
       if (!change) {
+        return;
+      }
+      if (!BUTTONS_INSTALLED) {
         return;
       }
       const reviewApproved =
