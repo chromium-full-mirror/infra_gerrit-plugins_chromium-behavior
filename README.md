@@ -10,22 +10,22 @@ This plugin must be placed inside the Gerrit plugins directory:
 
 ### Web Plugin Development
 
+Run the commands below in web/.
+
 For running TypeScript unit tests execute:
 
-    bazel test --test_output=all //plugins/chromium-behavior/web:karma_test
+    make test
 
 For checking or fixing eslint formatter problems run:
 
-    bazel test //plugins/chromium-behavior/web:lint_test
-    bazel run //plugins/chromium-behavior/web:lint_bin -- \
-      --fix "$(pwd)/plugins/chromium-behavior/web"
+    make lint_test
+    make lint_fix
 
 For testing the plugin with
 [Gerrit FE Dev Helper](https://gerrit.googlesource.com/gerrit-fe-dev-helper/)
-build the JavaScript bundle and copy it to the `plugins/chromium-behavior` folder:
+the command below builds the JavaScript bundle and copies it to the `plugins/chromium-behavior` folder:
 
-    bazel build //plugins/chromium-behavior/web:chromium-behavior
-    cp -f bazel-bin/plugins/chromium-behavior/web/chromium-behavior.js plugins/
+    make build
 
 Start polygerit-ui server:
 

@@ -183,15 +183,13 @@ async function setApprovalLabels(
     await plugin.restApi().post(url, body);
     // TODO(http://crbug.com/gerrit/6689): Use real plugin API to reload
     // change when available.
-    changeActions
-      .ensureEl()
-      .dispatchEvent(
-        new CustomEvent('reload', {
-          detail: {clearPatchset: true},
-          bubbles: false,
-          composed: true,
-        })
-      );
+    changeActions.ensureEl().dispatchEvent(
+      new CustomEvent('reload', {
+        detail: {clearPatchset: true},
+        bubbles: false,
+        composed: true,
+      })
+    );
   } catch (err) {
     changeActions
       .ensureEl()
