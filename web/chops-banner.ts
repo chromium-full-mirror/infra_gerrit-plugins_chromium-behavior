@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 
+import {getGerritHost} from './common';
 import {ChopsDashClient, LiveAnnouncement} from './chops-announcements';
 
 const REFRESH_TIME_MIN = 5;
@@ -49,17 +50,13 @@ export class ChopsBanner {
   private shownAnnouncements: LiveAnnouncement[] = [];
 
   constructor(host: string, element: HTMLElement) {
-    switch (host) {
-      case 'chromium-review.googlesource.com':
-      case 'canary-chromium-review.googlesource.com':
-        this.chopsAnnouncementsPlatform = 'chromium-review';
-        break;
-      case 'chrome-internal-review.googlesource.com':
-      case 'canary-chrome-internal-review.googlesource.com':
-        this.chopsAnnouncementsPlatform = 'chrome-internal-review';
-        break;
-      default:
-        throw new Error('Host not supported.');
+    const gerritHost = getGerritHost(host);
+    if (gerritHost === 'chromium') {
+      this.chopsAnnouncementsPlatform = 'chromium-review';
+    } else if (gerritHost === 'chrome-internal') {
+      this.chopsAnnouncementsPlatform = 'chrome-internal-review';
+    } else {
+      throw new Error('Host not supported.');
     }
 
     // Set up calls to chopsdash to fetch live announcements

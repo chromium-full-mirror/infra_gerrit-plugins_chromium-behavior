@@ -7,9 +7,24 @@
 
 import './test/test-setup';
 
-import {getTrailer} from './common';
+import {getGerritHost, getTrailer} from './common';
 
 suite('common-test', () => {
+  test('getGerritHost', () => {
+    const hosts = [
+      'canary-foo-bar-review.googlesource.com',
+      'foo-bar-review.googlesource.com',
+      'canary-foo-bar-review.git.corp.google.com',
+      'foo-bar-review.git.corp.google.com',
+    ];
+
+    for (const host of hosts) {
+      assert.equal(getGerritHost(host), 'foo-bar');
+    }
+
+    assert.equal(getGerritHost('not-a-valid-host'), '');
+  });
+
   test('getTrailer', () => {
     const commitMsg =
       'Commit message\n' + 'Trailer-1: foo\n' + 'Trailer-2: bar\n';

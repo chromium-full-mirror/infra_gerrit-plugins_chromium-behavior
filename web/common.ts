@@ -23,6 +23,20 @@ export const CQ_LABEL = 'Commit-Queue';
 export const STATUS_SUBMITTED = 'MERGED';
 
 /**
+ * Returns the name of the Gerrit host.
+ *
+ * @param host - a URL
+ * @returns Gerrit host
+ */
+export function getGerritHost(host: string): string {
+  const match =
+    /^(?:canary-)?(.+)-review\.(?:googlesource|git\.corp\.google)\.com/.exec(
+      host
+    );
+  return (match && match[1]) ?? '';
+}
+
+/**
  * Returns whether the specified vote is permitted on the label.
  *
  * @param change - gr-change-view

@@ -33,6 +33,7 @@ import {
   installSelfReviewWarner,
   installLabelValuesCallbackReviewWarner,
 } from './self-review-warner';
+import {getGerritHost} from './common';
 
 window.Gerrit.install((plugin: PluginApi) => {
   const replyApi = plugin.changeReply();
@@ -45,19 +46,17 @@ window.Gerrit.install((plugin: PluginApi) => {
   });
 
   const rubberStamperHosts = [
-    'canary-chrome-internal-review.googlesource.com',
-    'canary-chromium-review.googlesource.com',
-    'chrome-internal-review.googlesource.com',
-    'chromium-review.googlesource.com',
-    'fuchsia-review.googlesource.com',
-    'skia-review.googlesource.com',
-    'turquoise-internal-review.googlesource.com',
-    'webrtc-review.googlesource.com',
+    'chromium',
+    'chrome-internal',
+    'fuchsia',
+    'skia',
+    'turquoise',
+    'webrtc',
   ];
   let onConfirmRevert;
   let onRevert;
   let onPostRevert;
-  if (rubberStamperHosts.includes(window.location.host)) {
+  if (rubberStamperHosts.includes(getGerritHost(window.location.host))) {
     onConfirmRevert = installASCheckbox;
     onRevert = interceptRevertMessage;
     onPostRevert = approveAndSubmitRevert;
