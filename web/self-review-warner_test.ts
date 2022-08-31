@@ -5,8 +5,6 @@
  * found in the LICENSE file.
  */
 
-import './test/test-setup';
-
 import {REVIEW_LABEL} from './common';
 
 import {installOnSelfApproval} from './self-review-warner';

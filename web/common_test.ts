@@ -5,7 +5,7 @@
  * found in the LICENSE file.
  */
 
-import './test/test-setup';
+import {assert} from '@open-wc/testing';
 
 import {getGerritHost, getTrailer} from './common';
 
