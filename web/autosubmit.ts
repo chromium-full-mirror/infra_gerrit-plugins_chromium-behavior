@@ -168,7 +168,7 @@ async function setApprovalLabels(
   sendToCQ: boolean
 ) {
   // TODO(rmistry): Add getChangeNum to GrChangeActionsInterface?
-  const url = `/changes/${change._number}/revisions/current/review`;
+  const url = `/changes/${change._number}/revisions/${change.current_revision}/review`;
   const body: {labels: {[k: string]: string}; drafts: string} = {
     labels: {
       [REVIEW_LABEL]: `+${REVIEW_LABEL_MAX_VALUE}`,
