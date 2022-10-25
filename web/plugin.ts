@@ -33,6 +33,7 @@ import {
   installSelfReviewWarner,
   installLabelValuesCallbackReviewWarner,
 } from './self-review-warner';
+import {installCorpWarner} from './corp-warner';
 import {getGerritHost} from './common';
 
 window.Gerrit.install((plugin: PluginApi) => {
@@ -81,4 +82,7 @@ window.Gerrit.install((plugin: PluginApi) => {
   // Watch for any label value changes
   installLabelValuesCallbackAutosubmit(plugin);
   installLabelValuesCallbackReviewWarner(plugin);
+
+  // Warn on corp links in comments.
+  installCorpWarner(plugin);
 });
