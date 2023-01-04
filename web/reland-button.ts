@@ -46,7 +46,7 @@ export async function maybeInstallReland(
   plugin: PluginApi,
   change: ChangeInfo
 ) {
-  if (change.status !== STATUS_SUBMITTED) {
+  if (change.status !== STATUS_SUBMITTED || change.revert_of) {
     return;
   }
 
