@@ -68,7 +68,9 @@ export class CorpWarner extends LitElement {
     }
     return html`<div class="container">
       <gr-icon icon="warning" filled class="warning-icon"></gr-icon>
-      <a>Prefer googlesource over corp URLs.</a>
+      <a>
+        Prefer public over corp URLs, for example "chromium.googlesource.com".
+      </a>
     </div>`;
   }
 }
