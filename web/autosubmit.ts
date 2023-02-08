@@ -341,18 +341,15 @@ async function replaceQuickApproveButton(
       }
     }
 
+    if (CUSTOM_QUICK_APPROVE_KEY !== null) {
+      // Remove the button before reinstalling.
+      changeActions.remove(CUSTOM_QUICK_APPROVE_KEY);
+      changeActions.removeTapListener(CUSTOM_QUICK_APPROVE_KEY, () => {});
+      CUSTOM_QUICK_APPROVE_KEY = null;
+    }
+
+    // Do not create a new button because this user already set CR+1.
     if (isLabelApproved(change, REVIEW_LABEL) && approvedByCurrentUser) {
-      if (CUSTOM_QUICK_APPROVE_KEY !== null) {
-        // The custom button is visible but should be now removed because
-        // the user set CR+1.
-        changeActions.remove(CUSTOM_QUICK_APPROVE_KEY);
-        changeActions.removeTapListener(CUSTOM_QUICK_APPROVE_KEY, () => {});
-        CUSTOM_QUICK_APPROVE_KEY = null;
-      }
-      // Do not create a new button because this user already set CR+1.
-      return;
-    } else if (CUSTOM_QUICK_APPROVE_KEY !== null) {
-      // There is already a button no need to create a new one.
       return;
     }
 
