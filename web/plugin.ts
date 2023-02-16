@@ -49,6 +49,8 @@ window.Gerrit.install((plugin: PluginApi) => {
   const rubberStamperHosts = [
     'chromium',
     'chrome-internal',
+    'dart',
+    'dart-internal',
     'fuchsia',
     'skia',
     'turquoise',
