@@ -6,55 +6,51 @@
  */
 
 import {REVIEW_LABEL} from './common';
-
-import {installOnSelfApproval} from './self-review-warner';
+import {warnerHook} from './self-review-warner';
 
 suite('self-review-warner test', () => {
-  test('installOnSelfApproval without votes', () => {
-    const stub = sinon.stub();
-    const plugin = {
-      hook: () => {
-        return {
-          onAttached: stub,
-        };
+  test('warnerHook without votes', () => {
+    const el =  {
+      'change': {
+        owner: {email: 'foo@bar.com'},
+        labels: {[REVIEW_LABEL]: {}},
       },
+      'getElementsByClassName': () => [],
     };
-    const change = {
-      owner: {email: 'foo@bar.com'},
-      labels: {[REVIEW_LABEL]: {}},
-    };
+    // In this test, we expectwarnerHooks not to call methods that don't exist
+    // in this dummy `el` object.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    installOnSelfApproval(plugin as any, change as any);
+    warnerHook(el as any);
   });
 
   test('installOnSelfApproval with a service account', () => {
     const stub = sinon.stub();
-    const plugin = {
-      hook: () => {
-        return {
-          onAttached: stub,
-        };
+    const el = {
+      change: {
+        owner: {email: 'foo@bar.com'},
+        labels: {
+          [REVIEW_LABEL]: {
+            all: [
+              {
+                email: 'foo@bar.com',
+                value: 0,
+                tags: ['SERVICE_USER'],
+              },
+            ],
+          },
+        }
       },
-    };
-    let change = {
-      owner: {email: 'foo@bar.com'},
-      labels: {
-        [REVIEW_LABEL]: {
-          all: [
-            {
-              email: 'foo@bar.com',
-              value: 0,
-              tags: ['SERVICE_USER'],
-            },
-          ],
-        },
+      'getElementsByClassName': () => [],
+      'getRootNode': () => {
+        return {'insertBefore': () => {}, 'childNodes': ['foo']}
       },
+      'appendChild': stub,
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    installOnSelfApproval(plugin as any, change as any);
+    warnerHook(el as any);
     sinon.assert.notCalled(stub);
 
-    change = {
+    el.change = {
       owner: {email: 'foo@bar.com'},
       labels: {
         [REVIEW_LABEL]: {
@@ -69,7 +65,7 @@ suite('self-review-warner test', () => {
       },
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    installOnSelfApproval(plugin as any, change as any);
+    warnerHook(el as any);
     sinon.assert.calledOnce(stub);
   });
 });

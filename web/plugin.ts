@@ -30,8 +30,7 @@ import {installLgtmWatcher} from './lgtm-catcher';
 import {maybeInstallReland} from './reland-button';
 import {warnAboutTbr} from './tbr-warner';
 import {
-  installSelfReviewWarner,
-  installLabelValuesCallbackReviewWarner,
+  warnerHook,
 } from './self-review-warner';
 import {installCorpWarner} from './corp-warner';
 import {getGerritHost} from './common';
@@ -71,11 +70,11 @@ window.Gerrit.install((plugin: PluginApi) => {
   plugin.hook('confirm-revert-change').onAttached(onConfirmRevert);
   plugin.on(EventType.REVERT, onRevert);
   plugin.on(EventType.POST_REVERT, onPostRevert);
+  plugin.hook('change-metadata-item').onAttached(warnerHook);
 
   plugin.on(EventType.SHOW_CHANGE, async (change: ChangeInfo) => {
     installLgtmWatcher(replyApi);
     await installAutoSubmit(plugin, change);
-    installSelfReviewWarner(plugin, change);
     await maybeInstallReland(plugin, change);
     await hideMoveChange(plugin);
   });
@@ -83,7 +82,6 @@ window.Gerrit.install((plugin: PluginApi) => {
 
   // Watch for any label value changes
   installLabelValuesCallbackAutosubmit(plugin);
-  installLabelValuesCallbackReviewWarner(plugin);
 
   // Warn on corp links in comments.
   installCorpWarner(plugin);

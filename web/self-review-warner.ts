@@ -5,20 +5,15 @@
  * found in the LICENSE file.
  */
 
-import {PluginApi} from '@gerritcodereview/typescript-api/plugin';
-
 import {
   ChangeInfo,
   ApprovalInfo,
 } from '@gerritcodereview/typescript-api/rest-api';
 
-import {LabelsChangedDetail} from '@gerritcodereview/typescript-api/change-reply';
-
 import {
   REVIEW_LABEL,
   STATUS_SUBMITTED,
   getApprovalsForLabel,
-  getChangeObj,
   getLabelMaxValue,
 } from './common';
 
@@ -28,7 +23,7 @@ const SELF_APPROVAL_MESSAGE =
   'submitted.';
 
 const WARNER_STYLES = `
-.container {
+.chromium-warner {
   margin: 5px;
   width: 20em;
 }
@@ -38,39 +33,26 @@ const WARNER_STYLES = `
   font-weight: bold;
 }`;
 
-export function installSelfReviewWarner(plugin: PluginApi, change: ChangeInfo) {
+/**
+ * Installs a warning under the change's metadata.
+ *
+ * @param element change-metadata-item
+ *
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function warnerHook(element: any) {
+  const change = element.change as ChangeInfo;
+
+  // Remove any previous installations.
+  for (const child of element.getElementsByClassName('chromium-warner')) {
+    element.removeChild(child);
+  }
+
   // Don't warn on submitted changes.
   if (change.status === STATUS_SUBMITTED) {
     return;
   }
 
-  // Display a warning if the change is already self-approved.
-  installOnSelfApproval(plugin, change);
-}
-
-export function installLabelValuesCallbackReviewWarner(plugin: PluginApi) {
-  // After each label update, check again if the change has been self-approved.
-  const replyApi = plugin.changeReply();
-  replyApi.addLabelValuesChangedCallback(
-    async (labelDetail: LabelsChangedDetail, change?: ChangeInfo) => {
-      if (!change) {
-        return;
-      }
-      // Only check again if the Code-Review label was just approved.
-      const maxValue = `+${getLabelMaxValue(change, REVIEW_LABEL)}`;
-      if (labelDetail.name !== REVIEW_LABEL || labelDetail.value !== maxValue) {
-        return;
-      }
-      const refreshedChange = await getChangeObj(plugin, change);
-      installOnSelfApproval(plugin, refreshedChange);
-    }
-  );
-}
-
-/**
- * Displays an alert if the change is approved by its owner.
- */
-export function installOnSelfApproval(plugin: PluginApi, change: ChangeInfo) {
   const maxValue = getLabelMaxValue(change, REVIEW_LABEL);
   const isSelfApproved = getApprovalsForLabel(change, REVIEW_LABEL).some(
     (vote: ApprovalInfo) =>
@@ -78,20 +60,8 @@ export function installOnSelfApproval(plugin: PluginApi, change: ChangeInfo) {
       vote.value === maxValue &&
       !vote.tags?.includes('SERVICE_USER')
   );
-  if (isSelfApproved) {
-    plugin.hook('change-metadata-item').onAttached(installWarner);
-  }
-}
-
-/**
- * Installs a warning under the change's metadata.
- *
- * @param element change-metadata-item
- */
-export function installWarner(element: HTMLElement) {
-  // Remove any previous installations.
-  while (element.firstChild) {
-    element.removeChild(element.firstChild);
+  if (!isSelfApproved) {
+    return;
   }
 
   // Style the element
@@ -102,7 +72,7 @@ export function installWarner(element: HTMLElement) {
 
   // Add the self-approval meessage.
   const container = document.createElement('div');
-  container.className = 'container';
+  container.className = 'chromium-warner';
 
   const icon = document.createElement('span');
   icon.className = 'warning';
