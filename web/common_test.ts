@@ -39,10 +39,15 @@ suite('common-test', () => {
   });
 
   test('getTrailer CAPS= style tags', () => {
-    const commitMsg =
-      'Commit message\n' + 'OLD_STYLE=foo\n' + 'OLD_STYLE=bar\n';
-    const trailer = getTrailer(commitMsg, 'Old-Style');
-    assert.equal(trailer, 'Old-Style: foo\nOld-Style: bar\n');
+    let commitMsg = 'Message\n' + 'Old-Style= foo\n' + 'OLD_STYLE=bar\n';
+    assert.equal(
+      getTrailer(commitMsg, 'Old-Style'),
+      'OLD_STYLE=foo\nOLD_STYLE=bar\n'
+    );
+
+    commitMsg = 'Message\n' + 'BUG= b:123,b:456\n' + 'TEST=CQ passes\n';
+    assert.equal(getTrailer(commitMsg, 'Bug'), 'BUG=b:123,b:456\n');
+    assert.equal(getTrailer(commitMsg, 'Test'), 'TEST=CQ passes\n');
   });
 
   test('getTrailer trailer with comma', () => {
