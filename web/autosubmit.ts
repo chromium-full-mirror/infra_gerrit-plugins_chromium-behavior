@@ -185,8 +185,7 @@ async function setApprovalLabels(
     // change when available.
     changeActions.ensureEl().dispatchEvent(
       new CustomEvent('reload', {
-        detail: {clearPatchset: true},
-        bubbles: false,
+        bubbles: true,
         composed: true,
       })
     );
