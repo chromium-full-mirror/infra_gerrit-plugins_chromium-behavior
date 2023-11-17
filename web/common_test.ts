@@ -41,13 +41,25 @@ suite('common-test', () => {
   test('getTrailer CAPS= style tags', () => {
     let commitMsg = 'Message\n' + 'Old-Style= foo\n' + 'OLD_STYLE=bar\n';
     assert.equal(
-      getTrailer(commitMsg, 'Old-Style'),
+      getTrailer(commitMsg, 'Old-Style', false),
       'OLD_STYLE=foo\nOLD_STYLE=bar\n'
     );
 
     commitMsg = 'Message\n' + 'BUG= b:123,b:456\n' + 'TEST=CQ passes\n';
-    assert.equal(getTrailer(commitMsg, 'Bug'), 'BUG=b:123,b:456\n');
-    assert.equal(getTrailer(commitMsg, 'Test'), 'TEST=CQ passes\n');
+    assert.equal(getTrailer(commitMsg, 'Bug', false), 'BUG=b:123,b:456\n');
+    assert.equal(getTrailer(commitMsg, 'Test', false), 'TEST=CQ passes\n');
+  });
+
+  test('getTrailer CAPS= style tags normalized', () => {
+    let commitMsg = 'Message\n' + 'Old-Style= foo\n' + 'OLD_STYLE=bar\n';
+    assert.equal(
+      getTrailer(commitMsg, 'Old-Style', true),
+      'Old-Style: foo\nOld-Style: bar\n'
+    );
+
+    commitMsg = 'Message\n' + 'BUG= b:123,b:456\n' + 'TEST=CQ passes\n';
+    assert.equal(getTrailer(commitMsg, 'Bug', true), 'Bug: b:123,b:456\n');
+    assert.equal(getTrailer(commitMsg, 'Test', true), 'Test: CQ passes\n');
   });
 
   test('getTrailer trailer with comma', () => {

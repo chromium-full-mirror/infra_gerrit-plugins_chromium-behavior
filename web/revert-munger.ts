@@ -57,15 +57,14 @@ export function interceptRevertMessage(
 
   let newDescription = quoteOriginalMessage(revertMsg, originalMsg) + '\n\n';
 
-  // Carry over bug lines.
-  newDescription += getTrailer(originalMsg, 'Bug');
-  newDescription += getTrailer(originalMsg, 'Issue');
+  const isChromiumOS = change.project.startsWith('chromiumos/') ||
+    change.project.startsWith('chromeos/');
+  // Carry over bug lines. Don't normalize for ChromeOS.
+  newDescription += getTrailer(originalMsg, 'Bug', !isChromiumOS);
+  newDescription += getTrailer(originalMsg, 'Issue', !isChromiumOS);
 
   // CrOS projects need only the bug line carried over.
-  if (
-    change.project.indexOf('chromiumos/') === 0 ||
-    change.project.indexOf('chromeos/') === 0
-  ) {
+  if (isChromiumOS) {
     return newDescription.trim();
   }
 

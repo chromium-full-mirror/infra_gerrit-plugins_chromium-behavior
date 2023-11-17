@@ -84,9 +84,11 @@ export function getLabelMaxValue(change: ChangeInfo, labelName: string) {
  * @param token - the LHS of the trailer to parse (e.g. 'Bug')
  * @returns all found trailers in normalized form (e.g. 'Bug: 1')
  */
-export function getTrailer(message: string, token: string): string {
-  // TODO(http://crbug.com/753425): Remove support for CAPS= style tags. Until
-  // this style is officially unsupported, maintain style (see b/274781829).
+export function getTrailer(message: string, token: string,
+                           normalize: boolean = true): string {
+  // TODO(http://crbug.com/753425): Remove support for CAPS= style tags /
+  // normalize = False. Until this style is officially unsupported, maintain
+  // style (see b/274781829).
   const caps = token.replace(/-/g, '_').toUpperCase();
   const trailerRegexp = new RegExp(
     `^[ \t]*(${token}|${caps})(:|=)[ \t]*(.*)$`,
@@ -95,7 +97,7 @@ export function getTrailer(message: string, token: string): string {
   const response = new Set();
   for (const match of message.matchAll(trailerRegexp)) {
     const sep = match[2];
-    if (sep === ':') {
+    if (sep === ':' || normalize) {
       response.add(`${token}: ${match[3]}\n`);
     } else {
       response.add(`${caps}=${match[3]}\n`);
