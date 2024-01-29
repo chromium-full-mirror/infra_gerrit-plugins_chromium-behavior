@@ -142,7 +142,7 @@ async function createReland(plugin: PluginApi, notify: string) {
   if (currentRevision.commit) {
     orig = currentRevision.commit.message.trim();
   }
-  const subject = 'Reland "' + _CURR_CHANGE.subject + '"\n\n';
+  const subject = 'Reland "' + String(_CURR_CHANGE.subject) + '"\n\n';
   const disclaimer =
     `This is a reland of commit ${_CURR_CHANGE.current_revision}` +
     "\n\nOriginal change's description:\n";

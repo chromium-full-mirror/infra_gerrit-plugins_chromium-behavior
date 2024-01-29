@@ -84,8 +84,11 @@ export function getLabelMaxValue(change: ChangeInfo, labelName: string) {
  * @param token - the LHS of the trailer to parse (e.g. 'Bug')
  * @returns all found trailers in normalized form (e.g. 'Bug: 1')
  */
-export function getTrailer(message: string, token: string,
-                           normalize: boolean = true): string {
+export function getTrailer(
+  message: string,
+  token: string,
+  normalize = true
+): string {
   // TODO(http://crbug.com/753425): Remove support for CAPS= style tags /
   // normalize = False. Until this style is officially unsupported, maintain
   // style (see b/274781829).

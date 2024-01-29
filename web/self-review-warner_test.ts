@@ -10,12 +10,12 @@ import {warnerHook} from './self-review-warner';
 
 suite('self-review-warner test', () => {
   test('warnerHook without votes', () => {
-    const el =  {
-      'change': {
+    const el = {
+      change: {
         owner: {email: 'foo@bar.com'},
         labels: {[REVIEW_LABEL]: {}},
       },
-      'getElementsByClassName': () => [],
+      getElementsByClassName: () => [],
     };
     // In this test, we expectwarnerHooks not to call methods that don't exist
     // in this dummy `el` object.
@@ -38,13 +38,13 @@ suite('self-review-warner test', () => {
               },
             ],
           },
-        }
+        },
       },
-      'getElementsByClassName': () => [],
-      'getRootNode': () => {
-        return {'insertBefore': () => {}, 'childNodes': ['foo']}
+      getElementsByClassName: () => [],
+      getRootNode: () => {
+        return {insertBefore: () => {}, childNodes: ['foo']};
       },
-      'appendChild': stub,
+      appendChild: stub,
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     warnerHook(el as any);

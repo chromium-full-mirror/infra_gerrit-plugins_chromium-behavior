@@ -81,15 +81,16 @@ suite('common-test', () => {
 
   test('quoteOriginalMessage replaces Revert^$num with Reland', () => {
     const revertMsg = 'Revert^2 "Release Deadbeef 0.123.1 to prod"';
-    const expected = 'Reland "Release Deadbeef 0.123.1 to prod"' +
-        '\nOriginal change\'s description:\n>';
-    assert.equal(quoteOriginalMessage(revertMsg, ""), expected);
+    const expected =
+      'Reland "Release Deadbeef 0.123.1 to prod"' +
+      "\nOriginal change's description:\n>";
+    assert.equal(quoteOriginalMessage(revertMsg, ''), expected);
   });
 
   test('quoteOriginalMessage adds email-style quoting', () => {
-    const originMessage = "this is a commit message";
-    const expected = '\nOriginal change\'s description:\n' +
-    	'> this is a commit message';
-    assert.equal(quoteOriginalMessage("", originMessage), expected);
+    const originMessage = 'this is a commit message';
+    const expected =
+      "\nOriginal change's description:\n" + '> this is a commit message';
+    assert.equal(quoteOriginalMessage('', originMessage), expected);
   });
 });

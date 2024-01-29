@@ -29,9 +29,7 @@ import {
 import {installLgtmWatcher} from './lgtm-catcher';
 import {maybeInstallReland} from './reland-button';
 import {warnAboutTbr} from './tbr-warner';
-import {
-  warnerHook,
-} from './self-review-warner';
+import {warnerHook} from './self-review-warner';
 import {installCorpWarner} from './corp-warner';
 import {getGerritHost} from './common';
 

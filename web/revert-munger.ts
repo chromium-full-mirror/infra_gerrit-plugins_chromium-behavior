@@ -57,7 +57,8 @@ export function interceptRevertMessage(
 
   let newDescription = quoteOriginalMessage(revertMsg, originalMsg) + '\n\n';
 
-  const isChromiumOS = change.project.startsWith('chromiumos/') ||
+  const isChromiumOS =
+    change.project.startsWith('chromiumos/') ||
     change.project.startsWith('chromeos/');
   // Carry over bug lines. Don't normalize for ChromeOS.
   newDescription += getTrailer(originalMsg, 'Bug', !isChromiumOS);
