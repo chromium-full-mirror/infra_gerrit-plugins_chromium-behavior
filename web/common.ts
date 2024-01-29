@@ -162,7 +162,7 @@ export function getChangeDrafts(plugin: PluginApi, change: ChangeInfo) {
  */
 export function quoteOriginalMessage(revertMsg: string, originalMsg: string) {
   // Show reverts-of-reverts as relands instead.
-  let newMessage = revertMsg.replace(/^Revert "Revert "(.*)""/, 'Reland "$1"');
+  let newMessage = revertMsg.replace(/^Revert\^\d+ "(.*)"/, 'Reland "$1"');
 
   newMessage += "\nOriginal change's description:\n";
 
