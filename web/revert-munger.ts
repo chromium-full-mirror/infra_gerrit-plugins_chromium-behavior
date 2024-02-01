@@ -89,8 +89,12 @@ export function interceptRevertMessage(
     );
     AS_SPAN.style.display = 'none';
   } else {
-    newDescription +=
-      'No-Presubmit: true\n' + 'No-Tree-Checks: true\n' + 'No-Try: true\n';
+    if (confirm(
+      'CL landed less than 24 hours ago.\n' +
+        'Do you want to run CQ on the revert? (Cancel to skip CQ)')) {
+      newDescription += 'No-Presubmit: true\n' + 'No-Tree-Checks: true\n' +
+        'No-Try: true\n';
+    }
   }
 
   return newDescription.trim();
