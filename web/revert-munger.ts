@@ -89,7 +89,7 @@ export function interceptRevertMessage(
     );
     AS_SPAN.style.display = 'none';
   } else {
-    if (confirm(
+    if (!confirm(
       'CL landed less than 24 hours ago.\n' +
         'Do you want to run CQ on the revert? (Cancel to skip CQ)')) {
       newDescription += 'No-Presubmit: true\n' + 'No-Tree-Checks: true\n' +
