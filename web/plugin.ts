@@ -56,7 +56,8 @@ window.Gerrit.install((plugin: PluginApi) => {
   let onConfirmRevert;
   let onRevert;
   let onPostRevert;
-  if (rubberStamperHosts.includes(getGerritHost(window.location.host))) {
+  const gerritHost = getGerritHost(window.location.host);
+  if (rubberStamperHosts.includes(gerritHost)) {
     onConfirmRevert = installASCheckbox;
     onRevert = interceptRevertMessage;
     onPostRevert = approveAndSubmitRevert;
@@ -81,6 +82,8 @@ window.Gerrit.install((plugin: PluginApi) => {
   // Watch for any label value changes
   installLabelValuesCallbackAutosubmit(plugin);
 
-  // Warn on corp links in comments.
-  installCorpWarner(plugin);
+  // Warn on corp links in comments for public hosts.
+  if (!gerritHost.endsWith('-internal')) {
+    installCorpWarner(plugin);
+  }
 });
