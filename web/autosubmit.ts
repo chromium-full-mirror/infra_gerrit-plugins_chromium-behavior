@@ -352,18 +352,20 @@ async function replaceQuickApproveButton(
       return;
     }
 
-    // Create the custom quick approve button.
-    const key = changeActions.add(
-      ActionType.CHANGE,
-      `Code-Review+${REVIEW_LABEL_MAX_VALUE}`
-    );
-    changeActions.setEnabled(key, true);
-    changeActions.addTapListener(
-      key,
-      quickApproveHandler(plugin, change, changeActions, key)
-    );
-    changeActions.setActionPriority(ActionType.CHANGE, key, -3);
-    CUSTOM_QUICK_APPROVE_KEY = key;
+    // Create the custom quick approve button if the CL isn't the user's.
+    if (change.owner._account_id != resp._account_id) {
+      const key = changeActions.add(
+        ActionType.CHANGE,
+        `Code-Review+${REVIEW_LABEL_MAX_VALUE}`
+      );
+      changeActions.setEnabled(key, true);
+      changeActions.addTapListener(
+        key,
+        quickApproveHandler(plugin, change, changeActions, key)
+      );
+      changeActions.setActionPriority(ActionType.CHANGE, key, -3);
+      CUSTOM_QUICK_APPROVE_KEY = key;
+    }
   } catch (err) {
     const changeActions = plugin.changeActions();
     changeActions
