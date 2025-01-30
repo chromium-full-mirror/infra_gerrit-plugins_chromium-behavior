@@ -173,7 +173,7 @@ async function setApprovalLabels(
     labels: {
       [REVIEW_LABEL]: `+${REVIEW_LABEL_MAX_VALUE}`,
     },
-    drafts: 'PUBLISH',
+    drafts: 'PUBLISH_ALL_REVISIONS',
   };
   if (sendToCQ) {
     body['labels'][CQ_LABEL] = `+${CQ_LABEL_MAX_VALUE}`;
