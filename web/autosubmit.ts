@@ -25,7 +25,7 @@ import {
 
 import {html, LitElement} from 'lit';
 
-import {customElement, property, state} from 'lit/decorators';
+import {customElement, property, state} from 'lit/decorators.js';
 
 import {
   CQ_LABEL,

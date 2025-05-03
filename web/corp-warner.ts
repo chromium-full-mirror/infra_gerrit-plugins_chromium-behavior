@@ -7,7 +7,7 @@
 
 import {PluginApi} from '@gerritcodereview/typescript-api/plugin';
 import {css, html, LitElement} from 'lit';
-import {customElement, property} from 'lit/decorators';
+import {customElement, property} from 'lit/decorators.js';
 
 const CORP_KEYWORD = '.corp.google';
 export const CORP_WARNER_ELEMENT = 'corp-warner';

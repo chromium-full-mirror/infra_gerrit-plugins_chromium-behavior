@@ -21,7 +21,7 @@ import {
 
 import {html, LitElement} from 'lit';
 
-import {customElement, property} from 'lit/decorators';
+import {customElement, property} from 'lit/decorators.js';
 
 import {
   REVIEW_LABEL,
