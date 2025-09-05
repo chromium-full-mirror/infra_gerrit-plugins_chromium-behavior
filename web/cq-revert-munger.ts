@@ -109,9 +109,6 @@ export function cqInterceptRevertMessage(
       'No-Try: true\n';
   }
 
-  // Carry over bug lines.
-  newDescription += getTrailer(originalMsg, 'Bug');
-  newDescription += getTrailer(originalMsg, 'Issue');
   // Carry over original trybots trailer.
   newDescription += getTrailer(originalMsg, 'Cq-Include-Trybots');
 
