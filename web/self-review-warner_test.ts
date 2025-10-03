@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 
+import './test-setup';
 import {REVIEW_LABEL} from './common';
 import {warnerHook} from './self-review-warner';
 

@@ -33,7 +33,7 @@ import {warnerHook} from './self-review-warner';
 import {installCorpWarner} from './corp-warner';
 import {getGerritHost} from './common';
 
-window.Gerrit.install((plugin: PluginApi) => {
+window.Gerrit?.install((plugin: PluginApi) => {
   const replyApi = plugin.changeReply();
   plugin.hook('banner').onAttached((el: HTMLElement) => {
     try {
