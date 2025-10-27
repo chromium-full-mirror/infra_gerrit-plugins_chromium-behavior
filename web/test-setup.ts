@@ -18,12 +18,11 @@ window.Gerrit = {
   styles: {
     font: css``,
     form: css``,
-    icon: css``,
     menuPage: css``,
     spinner: css``,
     subPage: css``,
     table: css``,
     modal: css``,
+    material: css``,
   },
 };
-

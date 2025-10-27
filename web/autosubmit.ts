@@ -180,6 +180,11 @@ async function setApprovalLabels(
   }
   const changeActions = plugin.changeActions();
   try {
+    // Trigger before quick approve event handlers, and abort if a
+    // handler is blocking.
+    if (!await changeActions.notifyBeforeChangeAction('review', change)) {
+      return;
+    }
     await plugin.restApi().post(url, body);
     // TODO(http://crbug.com/gerrit/6689): Use real plugin API to reload
     // change when available.
