@@ -62,6 +62,7 @@ export function interceptRevertMessage(
     change.project.startsWith('chromeos/');
   // Carry over bug lines. Don't normalize for ChromeOS.
   newDescription += getTrailer(originalMsg, 'Bug', !isChromiumOS);
+  newDescription += getTrailer(originalMsg, 'Fixed', !isChromiumOS);
   newDescription += getTrailer(originalMsg, 'Issue', !isChromiumOS);
 
   // CrOS projects need only the bug line carried over.
