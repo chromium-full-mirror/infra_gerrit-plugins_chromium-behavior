@@ -62,7 +62,21 @@ export function interceptRevertMessage(
     change.project.startsWith('chromeos/');
   // Carry over bug lines. Don't normalize for ChromeOS.
   newDescription += getTrailer(originalMsg, 'Bug', !isChromiumOS);
-  newDescription += getTrailer(originalMsg, 'Fixed', !isChromiumOS);
+  // If the bug was already re-opened, a revert shouldn't close it again.
+  // TODO(crbug.com/40917201): Handle possible duplication of bugs
+  // here. Commit messages including:
+  //   Bug: 1234
+  //   Fixed: 1234
+  // will currently create two "Bug: 1234" lines. Solving this fully is
+  // somewhat difficult, as you need to account for different Bug
+  // lines, such as:
+  //   Bug: 1234, 5678
+  //   Fixed: 1234
+  // and:
+  //   Bug: chromium:1234
+  //   Fixed: 1234
+  newDescription += getTrailer(
+    originalMsg, 'Fixed', !isChromiumOS).replace(/Fixed/g, 'Bug');
   newDescription += getTrailer(originalMsg, 'Issue', !isChromiumOS);
 
   // CrOS projects need only the bug line carried over.
