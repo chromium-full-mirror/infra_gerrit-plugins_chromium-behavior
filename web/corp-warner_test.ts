@@ -62,4 +62,24 @@ suite('corp-warner test', () => {
     element.isDraft = true;
     assert.isNotNull(element.render());
   });
+
+  test('warning text suggests correct public url', async () => {
+    element.isDraft = true;
+    element.message = 'see https://chromium-review.git.corp.google.com/c/1234';
+    element.comment.message = '';
+    await element.updateComplete;
+
+    const text = element.shadowRoot!.textContent!;
+    assert.include(text, 'https://chromium-review.googlesource.com/c/1234');
+  });
+
+  test('warning text falls back to default for other corp links', async () => {
+    element.isDraft = true;
+    element.message = 'see some.other.corp.google.com link';
+    element.comment.message = '';
+    await element.updateComplete;
+
+    const text = element.shadowRoot!.textContent!;
+    assert.include(text, '"chromium.googlesource.com"');
+  });
 });

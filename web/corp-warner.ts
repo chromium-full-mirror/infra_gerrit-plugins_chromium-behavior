@@ -66,10 +66,18 @@ export class CorpWarner extends LitElement {
     ) {
       return;
     }
+
+    const messageToSearch = this.message || this.comment?.message || '';
+    const offendingWord = messageToSearch.split(/\s+/).find(
+        (w: string) => w.includes('.git.corp.google.com'));
+    const suggestion = offendingWord ?
+        offendingWord.replace('.git.corp.google.com', '.googlesource.com') :
+        'chromium.googlesource.com';
+
     return html`<div class="container">
       <gr-icon icon="warning" filled class="warning-icon"></gr-icon>
       <a>
-        Prefer public over corp URLs, for example "chromium.googlesource.com".
+        Prefer public over corp URLs, for example "${suggestion}".
       </a>
     </div>`;
   }
