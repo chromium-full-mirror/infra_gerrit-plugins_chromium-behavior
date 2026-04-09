@@ -30,7 +30,6 @@ import {installLgtmWatcher} from './lgtm-catcher';
 import {maybeInstallReland} from './reland-button';
 import {warnAboutTbr} from './tbr-warner';
 import {warnerHook} from './self-review-warner';
-import {installCorpWarner} from './corp-warner';
 import {getGerritHost} from './common';
 
 window.Gerrit?.install((plugin: PluginApi) => {
@@ -81,9 +80,4 @@ window.Gerrit?.install((plugin: PluginApi) => {
 
   // Watch for any label value changes
   installLabelValuesCallbackAutosubmit(plugin);
-
-  // Warn on corp links in comments for public hosts.
-  if (!gerritHost.endsWith('-internal')) {
-    installCorpWarner(plugin);
-  }
 });
