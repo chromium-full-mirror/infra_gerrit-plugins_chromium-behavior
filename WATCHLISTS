@@ -15,7 +15,6 @@
 
   'WATCHLISTS': {
     'chromium_behavior': [
-      'rmistry+chromium_behavior@google.com',
     ],
   },
 
