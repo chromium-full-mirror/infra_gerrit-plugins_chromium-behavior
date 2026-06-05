@@ -12,7 +12,7 @@ import {
   getChangeLabel,
   getLabelMaxValue,
   getTrailer,
-  quoteOriginalMessage,
+  prepareRevertDescription,
 } from './common';
 
 const AS_SPAN = document.createElement('span');
@@ -55,7 +55,7 @@ export function interceptRevertMessage(
     AS_SPAN.style.display = 'none';
   }
 
-  let newDescription = quoteOriginalMessage(revertMsg, originalMsg) + '\n\n';
+  let newDescription = prepareRevertDescription(revertMsg, originalMsg) + '\n\n';
 
   const isChromiumOS =
     change.project.startsWith('chromiumos/') ||

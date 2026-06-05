@@ -7,7 +7,11 @@
 
 import {assert} from '@open-wc/testing';
 
-import {getGerritHost, getTrailer, quoteOriginalMessage} from './common';
+import {
+  getGerritHost,
+  getTrailer,
+  prepareRevertDescription,
+} from './common';
 
 suite('common-test', () => {
   test('getGerritHost', () => {
@@ -79,18 +83,19 @@ suite('common-test', () => {
     assert.equal(trailer, 'Trailer: a,b\nTrailer: c\n');
   });
 
-  test('quoteOriginalMessage replaces Revert^$num with Reland', () => {
+  test('prepareRevertDescription replaces Revert^$num with Reland and does not add placeholder', () => {
     const revertMsg = 'Revert^2 "Release Deadbeef 0.123.1 to prod"';
     const expected =
       'Reland "Release Deadbeef 0.123.1 to prod"' +
       "\nOriginal change's description:\n>";
-    assert.equal(quoteOriginalMessage(revertMsg, ''), expected);
+    assert.equal(prepareRevertDescription(revertMsg, ''), expected);
   });
 
-  test('quoteOriginalMessage adds email-style quoting', () => {
+  test('prepareRevertDescription adds Failure Link placeholder and email-style quoting to revert', () => {
     const originMessage = 'this is a commit message';
     const expected =
+      '\nFailure Link: <LINK TO FAILURE>\n' +
       "\nOriginal change's description:\n" + '> this is a commit message';
-    assert.equal(quoteOriginalMessage('', originMessage), expected);
+    assert.equal(prepareRevertDescription('', originMessage), expected);
   });
 });

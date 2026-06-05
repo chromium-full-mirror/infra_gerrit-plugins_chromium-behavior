@@ -11,7 +11,7 @@ import {
   getChangeLabel,
   getLabelMaxValue,
   getTrailer,
-  quoteOriginalMessage,
+  prepareRevertDescription,
 } from './common';
 
 import {
@@ -59,7 +59,7 @@ export function cqInterceptRevertMessage(
     return revertMsg;
   }
 
-  let newDescription = quoteOriginalMessage(revertMsg, originalMsg) + '\n\n';
+  let newDescription = prepareRevertDescription(revertMsg, originalMsg) + '\n\n';
 
   // Only add TBR= and skip CQ control trailers if the
   // reverted change is recent enough and it's not reland.

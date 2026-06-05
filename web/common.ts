@@ -161,11 +161,21 @@ export function getChangeDrafts(plugin: PluginApi, change: ChangeInfo) {
 }
 
 /**
- * Add email-style quoting (> ) in front of the original commit message.
+ * Prepares the revert commit message description.
+ *
+ * Converts revert-of-revert to reland, inserts a Failure Link placeholder
+ * (if not a reland), and appends the quoted original commit message.
  */
-export function quoteOriginalMessage(revertMsg: string, originalMsg: string) {
+export function prepareRevertDescription(
+  revertMsg: string,
+  originalMsg: string
+): string {
   // Show reverts-of-reverts as relands instead.
   let newMessage = revertMsg.replace(/^Revert\^\d+ "(.*)"/, 'Reland "$1"');
+
+  if (!newMessage.startsWith('Reland "')) {
+    newMessage += '\nFailure Link: <LINK TO FAILURE>\n';
+  }
 
   newMessage += "\nOriginal change's description:\n";
 
