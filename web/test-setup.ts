@@ -24,5 +24,7 @@ window.Gerrit = {
     table: css``,
     modal: css``,
     material: css``,
+    shared: css``,
+    changeViewIntegration: css``,
   },
 };
