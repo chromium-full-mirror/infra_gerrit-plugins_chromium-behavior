@@ -31,6 +31,10 @@ import {maybeInstallReland} from './reland-button';
 import {warnAboutTbr} from './tbr-warner';
 import {warnerHook} from './self-review-warner';
 import {getGerritHost} from './common';
+import {
+  installIconPreview,
+  isIconPreviewHost,
+} from './icon-preview/icon-preview';
 
 window.Gerrit?.install((plugin: PluginApi) => {
   const replyApi = plugin.changeReply();
@@ -69,6 +73,11 @@ window.Gerrit?.install((plugin: PluginApi) => {
   plugin.on(EventType.REVERT, onRevert);
   plugin.on(EventType.POST_REVERT, onPostRevert);
   plugin.hook('change-metadata-item').onAttached(warnerHook);
+
+  // Rendered preview toggle for Chromium vector icon (*.icon) diffs.
+  if (isIconPreviewHost(gerritHost)) {
+    installIconPreview(plugin);
+  }
 
   plugin.on(EventType.SHOW_CHANGE, async (change: ChangeInfo) => {
     installLgtmWatcher(replyApi);
