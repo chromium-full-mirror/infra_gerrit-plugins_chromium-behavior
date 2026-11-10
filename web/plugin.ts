@@ -29,6 +29,10 @@ import {
 import {installLgtmWatcher} from './lgtm-catcher';
 import {maybeInstallReland} from './reland-button';
 import {warnAboutTbr} from './tbr-warner';
+import {
+  installTranslationScreenshotPreview,
+  isTranslationScreenshotPreviewHost,
+} from './translation-screenshot';
 import {warnerHook} from './self-review-warner';
 import {getGerritHost} from './common';
 import {
@@ -60,6 +64,9 @@ window.Gerrit?.install((plugin: PluginApi) => {
   let onRevert;
   let onPostRevert;
   const gerritHost = getGerritHost(window.location.host);
+  if (isTranslationScreenshotPreviewHost(gerritHost)) {
+    installTranslationScreenshotPreview(plugin);
+  }
   if (rubberStamperHosts.includes(gerritHost)) {
     onConfirmRevert = installASCheckbox;
     onRevert = interceptRevertMessage;
